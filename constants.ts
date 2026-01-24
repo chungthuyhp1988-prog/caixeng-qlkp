@@ -24,101 +24,122 @@ export const MOCK_MATERIALS: Material[] = [
 export const MOCK_PARTNERS: Partner[] = [
   {
     id: 'p1',
-    name: 'Vựa Ve Chai Bình Tân',
+    name: 'Kho Nhựa Hưng Thịnh',
     type: PartnerType.SUPPLIER,
-    phone: '0901234567',
-    address: 'Bình Tân, HCM',
+    phone: '0239 3856 123',
+    address: 'Khu CN Vũng Áng, Kỳ Anh, Hà Tĩnh',
+    totalVolume: 2500,
+    totalValue: 20000000
+  },
+  {
+    id: 'p2',
+    name: 'Kho Phế Liệu Minh Đức',
+    type: PartnerType.SUPPLIER,
+    phone: '0239 3724 456',
+    address: 'Thạch Hà, Hà Tĩnh',
+    totalVolume: 1800,
+    totalValue: 14400000
+  },
+  {
+    id: 'p3',
+    name: 'Công ty Nhựa Phế Liệu Nghệ An',
+    type: PartnerType.SUPPLIER,
+    phone: '0238 3845 789',
+    address: 'KCN VSIP Nghệ An, TP Vinh',
+    totalVolume: 3200,
+    totalValue: 25600000
+  },
+  {
+    id: 'p4',
+    name: 'Kho Thu Mua Nhựa Cửa Lò',
+    type: PartnerType.SUPPLIER,
+    phone: '0238 3925 234',
+    address: 'Thị xã Cửa Lò, Nghệ An',
     totalVolume: 1500,
     totalValue: 12000000
   },
   {
-    id: 'p2',
-    name: 'Công ty Môi Trường Xanh',
-    type: PartnerType.SUPPLIER,
-    phone: '0912345678',
-    address: 'Bình Chánh, HCM',
-    totalVolume: 800,
-    totalValue: 6400000
-  },
-  {
-    id: 'p3',
-    name: 'Nhà máy Tấm Ốp Tường An Phát',
+    id: 'p5',
+    name: 'Nhà Máy Sản Xuất Nhựa XS Plus',
     type: PartnerType.CUSTOMER,
-    phone: '0988776655',
-    address: 'KCN Tân Tạo',
-    totalVolume: 2000,
-    totalValue: 44000000
-  },
-  {
-    id: 'p4',
-    name: 'Xưởng Nhựa Hưng Yên',
-    type: PartnerType.CUSTOMER,
-    phone: '0977665544',
-    address: 'Hưng Yên',
-    totalVolume: 5000,
-    totalValue: 110000000
+    phone: '0239 3950 888',
+    address: 'KCN Formosa, Kỳ Anh, Hà Tĩnh',
+    totalVolume: 8500,
+    totalValue: 187000000
   }
 ];
 
 export const MOCK_TRANSACTIONS: Transaction[] = [
   {
     id: 't1',
-    date: '2023-10-24T09:30:00',
+    date: '2024-01-22T09:30:00',
     type: TransactionType.IMPORT,
     category: ExpenseCategory.MATERIAL,
     materialId: 'scrap',
     materialName: 'Nhựa Phế Liệu',
-    partnerName: 'Vựa Ve Chai Bình Tân',
+    partnerName: 'Kho Nhựa Hưng Thịnh',
+    weight: 2500,
+    totalValue: 20000000
+  },
+  {
+    id: 't2',
+    date: '2024-01-23T14:15:00',
+    type: TransactionType.EXPORT,
+    materialId: 'powder',
+    materialName: 'Bột Nhựa Thành Phẩm',
+    partnerName: 'Nhà Máy Sản Xuất Nhựa XS Plus',
+    weight: 8500,
+    totalValue: 187000000
+  },
+  {
+    id: 't3',
+    date: '2024-01-20T10:00:00',
+    type: TransactionType.IMPORT,
+    category: ExpenseCategory.MATERIAL,
+    materialId: 'scrap',
+    materialName: 'Nhựa Phế Liệu',
+    partnerName: 'Công ty Nhựa Phế Liệu Nghệ An',
+    weight: 3200,
+    totalValue: 25600000
+  },
+  {
+    id: 't4',
+    date: '2024-01-21T08:30:00',
+    type: TransactionType.IMPORT,
+    category: ExpenseCategory.MATERIAL,
+    materialId: 'scrap',
+    materialName: 'Nhựa Phế Liệu',
+    partnerName: 'Kho Phế Liệu Minh Đức',
+    weight: 1800,
+    totalValue: 14400000
+  },
+  {
+    id: 't5',
+    date: '2024-01-19T15:45:00',
+    type: TransactionType.IMPORT,
+    category: ExpenseCategory.MATERIAL,
+    materialId: 'scrap',
+    materialName: 'Nhựa Phế Liệu',
+    partnerName: 'Kho Thu Mua Nhựa Cửa Lò',
     weight: 1500,
     totalValue: 12000000
   },
   {
-    id: 't2',
-    date: '2023-10-24T14:15:00',
-    type: TransactionType.EXPORT,
-    materialId: 'powder',
-    materialName: 'Bột Nhựa Thành Phẩm',
-    partnerName: 'Nhà máy Tấm Ốp Tường An Phát',
-    weight: 2000,
-    totalValue: 44000000
-  },
-  {
-    id: 't3',
-    date: '2023-10-23T10:00:00',
-    type: TransactionType.IMPORT,
-    category: ExpenseCategory.MATERIAL,
-    materialId: 'scrap',
-    materialName: 'Nhựa Phế Liệu',
-    partnerName: 'Công ty Môi Trường Xanh',
-    weight: 800,
-    totalValue: 6400000
-  },
-  {
-    id: 't4',
-    date: '2023-10-23T16:45:00',
-    type: TransactionType.EXPORT,
-    materialId: 'powder',
-    materialName: 'Bột Nhựa Thành Phẩm',
-    partnerName: 'Xưởng Nhựa Hưng Yên',
-    weight: 5000,
-    totalValue: 110000000
-  },
-  {
-    id: 't5',
-    date: '2023-10-25T08:00:00',
+    id: 't6',
+    date: '2024-01-24T08:00:00',
     type: TransactionType.EXPENSE,
     category: ExpenseCategory.LABOR,
     partnerName: 'Nhân viên xưởng',
-    totalValue: 5000000,
-    note: 'Lương tuần 4 tháng 10'
+    totalValue: 5500000,
+    note: 'Lương tuần 4 tháng 1/2024'
   },
   {
-    id: 't6',
-    date: '2023-10-22T11:30:00',
+    id: 't7',
+    date: '2024-01-18T11:30:00',
     type: TransactionType.EXPENSE,
     category: ExpenseCategory.MACHINERY,
-    partnerName: 'Cơ khí Minh Hùng',
-    totalValue: 1500000,
+    partnerName: 'Cơ khí Hà Tĩnh',
+    totalValue: 2000000,
     note: 'Bảo trì máy xay số 2'
   }
 ];
