@@ -1,0 +1,5 @@
+{
+  "name": "PlasticCycle - Quản lý Kho Nhựa",
+  "description": "Ứng dụng quản lý quy trình tái chế nhựa: Nhập nhựa phế liệu và Xuất bột nhựa cho sản xuất tấm ốp tường.",
+  "requestFramePermissions": []
+}
