@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Settings, Package, Layers, AlertTriangle, CheckCircle2, ArrowRight, History, ArrowDownCircle, ArrowUpCircle, Clock } from 'lucide-react';
+import { Search, Settings, Package, Layers, AlertTriangle, CheckCircle2, ArrowRight, History, ArrowDownCircle, ArrowUpCircle, Clock, Trash2 } from 'lucide-react';
 import { formatCurrency } from '../constants';
 import { MaterialType, Material, Transaction, TransactionType } from '../types';
 
@@ -7,14 +7,16 @@ interface InventoryProps {
   materials: Material[];
   transactions: Transaction[];
   onProduce: (scrapAmount: number) => void;
+  onDeleteTransaction?: (id: string) => void;
 }
 
-const Inventory: React.FC<InventoryProps> = ({ materials, transactions, onProduce }) => {
+const Inventory: React.FC<InventoryProps> = ({ materials, transactions, onProduce, onDeleteTransaction }) => {
   const [filter, setFilter] = useState<'ALL' | MaterialType>('ALL');
   const [search, setSearch] = useState('');
   const [showProduceModal, setShowProduceModal] = useState(false);
   const [produceAmount, setProduceAmount] = useState('');
   const [historyTab, setHistoryTab] = useState<'IMPORT' | 'EXPORT'>('IMPORT');
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const filteredMaterials = materials.filter(m => {
     const matchesFilter = filter === 'ALL' || m.type === filter;
@@ -160,8 +162,8 @@ const Inventory: React.FC<InventoryProps> = ({ materials, transactions, onProduc
           <button
             onClick={() => setHistoryTab('IMPORT')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${historyTab === 'IMPORT'
-                ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-                : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'
+              ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+              : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'
               }`}
           >
             <ArrowDownCircle size={16} />
@@ -170,8 +172,8 @@ const Inventory: React.FC<InventoryProps> = ({ materials, transactions, onProduc
           <button
             onClick={() => setHistoryTab('EXPORT')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${historyTab === 'EXPORT'
-                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'
+              ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+              : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'
               }`}
           >
             <ArrowUpCircle size={16} />
@@ -188,8 +190,8 @@ const Inventory: React.FC<InventoryProps> = ({ materials, transactions, onProduc
               <div
                 key={transaction.id}
                 className={`flex items-center justify-between p-4 rounded-xl border transition-all hover:scale-[1.01] ${historyTab === 'IMPORT'
-                    ? 'bg-orange-500/5 border-orange-500/20'
-                    : 'bg-blue-500/5 border-blue-500/20'
+                  ? 'bg-orange-500/5 border-orange-500/20'
+                  : 'bg-blue-500/5 border-blue-500/20'
                   }`}
               >
                 <div className="flex items-center gap-3">
@@ -217,13 +219,24 @@ const Inventory: React.FC<InventoryProps> = ({ materials, transactions, onProduc
                     </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className={`font-bold ${historyTab === 'IMPORT' ? 'text-orange-400' : 'text-blue-400'}`}>
-                    {historyTab === 'IMPORT' ? '+' : '-'}{transaction.weight?.toLocaleString('vi-VN')} kg
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {formatCurrency(transaction.totalValue)}
-                  </p>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className={`font-bold ${historyTab === 'IMPORT' ? 'text-orange-400' : 'text-blue-400'}`}>
+                      {historyTab === 'IMPORT' ? '+' : '-'}{transaction.weight?.toLocaleString('vi-VN')} kg
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {formatCurrency(transaction.totalValue)}
+                    </p>
+                  </div>
+                  {onDeleteTransaction && (
+                    <button
+                      onClick={() => setDeleteConfirm(transaction.id)}
+                      className="p-2 hover:bg-slate-700/50 rounded-lg text-slate-500 hover:text-red-400 transition-colors"
+                      title="Xóa giao dịch"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -297,6 +310,38 @@ const Inventory: React.FC<InventoryProps> = ({ materials, transactions, onProduc
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-slate-800 rounded-2xl border border-red-500/30 p-6 w-full max-w-sm shadow-2xl">
+            <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Trash2 size={24} className="text-red-400" />
+            </div>
+            <h3 className="text-xl font-bold text-white text-center mb-2">Xác nhận xóa?</h3>
+            <p className="text-slate-400 text-sm text-center mb-6">
+              Bạn có chắc muốn xóa giao dịch này? Hành động này sẽ hoàn tác tồn kho và quỹ tiền.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium transition-colors"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={() => {
+                  onDeleteTransaction?.(deleteConfirm);
+                  setDeleteConfirm(null);
+                }}
+                className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition-colors"
+              >
+                Xóa
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -153,6 +153,39 @@ const App: React.FC = () => {
     }
   };
 
+  const handleDeleteTransaction = async (id: string) => {
+    try {
+      await transactionsAPI.delete(id);
+
+      // Reload all data to ensure stock/money stats are correct (triggers will handle DB, we reload UI)
+      const [materialsData, partnersData, transactionsData] = await Promise.all([
+        materialsAPI.getAll(),
+        partnersAPI.getAll(),
+        transactionsAPI.getAll()
+      ]);
+      setMaterials(materialsData);
+      setPartners(partnersData);
+      setTransactions(transactionsData);
+    } catch (err) {
+      console.error('Error deleting transaction:', err);
+      alert('Không thể xóa giao dịch. Vui lòng thử lại.');
+    }
+  };
+
+  const handleUpdateExpense = async (id: string, updates: any) => {
+    try {
+      await transactionsAPI.updateExpense(id, updates);
+
+      const [transactionsData] = await Promise.all([
+        transactionsAPI.getAll()
+      ]);
+      setTransactions(transactionsData);
+    } catch (err) {
+      console.error('Error updating expense:', err);
+      alert('Không thể cập nhật chi phí. Vui lòng thử lại.');
+    }
+  };
+
   // Handler: Sản Xuất
   const handleProduce = async (scrapAmount: number) => {
     try {
@@ -172,7 +205,7 @@ const App: React.FC = () => {
       case 'dashboard':
         return <Dashboard materials={materials} transactions={transactions} />;
       case 'inventory':
-        return <Inventory materials={materials} transactions={transactions} onProduce={handleProduce} />;
+        return <Inventory materials={materials} transactions={transactions} onProduce={handleProduce} onDeleteTransaction={handleDeleteTransaction} />;
       case 'partners':
         return <Partners partners={partners} onAddPartner={handleAddPartner} onUpdatePartner={handleUpdatePartner} onDeletePartner={handleDeletePartner} />;
       case 'import':
@@ -180,7 +213,7 @@ const App: React.FC = () => {
       case 'export':
         return <ExportForm materials={materials} onExport={handleExport} partners={partners} />;
       case 'finance':
-        return <CashFlow transactions={transactions} onAddTransaction={handleAddTransaction} />;
+        return <CashFlow transactions={transactions} onAddTransaction={handleAddTransaction} onDeleteTransaction={handleDeleteTransaction} onUpdateExpense={handleUpdateExpense} />;
       default:
         return <Dashboard materials={materials} transactions={transactions} />;
     }
