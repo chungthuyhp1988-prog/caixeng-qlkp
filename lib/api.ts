@@ -125,6 +125,40 @@ export const partnersAPI = {
             totalVolume: Number(data.total_volume),
             totalValue: Number(data.total_value)
         };
+    },
+
+    /**
+     * Cập nhật partner
+     */
+    update: async (id: string, updates: {
+        name?: string;
+        type?: PartnerType;
+        phone?: string;
+        address?: string;
+    }): Promise<void> => {
+        const { error } = await supabase
+            .from('partners')
+            .update({
+                name: updates.name,
+                type: updates.type,
+                phone: updates.phone,
+                address: updates.address
+            })
+            .eq('id', id);
+
+        if (error) throw error;
+    },
+
+    /**
+     * Xóa partner
+     */
+    delete: async (id: string): Promise<void> => {
+        const { error } = await supabase
+            .from('partners')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
     }
 };
 
@@ -301,6 +335,38 @@ export const transactionsAPI = {
 
         if (error) throw error;
         return data;
+    },
+
+    /**
+     * Xóa transaction
+     */
+    delete: async (id: string): Promise<void> => {
+        const { error } = await supabase
+            .from('transactions')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+    },
+
+    /**
+     * Cập nhật transaction (cho expense)
+     */
+    updateExpense: async (id: string, updates: {
+        category?: ExpenseCategory;
+        totalValue?: number;
+        note?: string;
+    }): Promise<void> => {
+        const { error } = await supabase
+            .from('transactions')
+            .update({
+                category: updates.category,
+                total_value: updates.totalValue,
+                note: updates.note
+            })
+            .eq('id', id);
+
+        if (error) throw error;
     }
 };
 

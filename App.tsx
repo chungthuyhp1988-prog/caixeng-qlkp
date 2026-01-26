@@ -60,6 +60,28 @@ const App: React.FC = () => {
     }
   };
 
+  const handleUpdatePartner = async (id: string, updates: Partial<Partner>) => {
+    try {
+      await partnersAPI.update(id, updates);
+      setPartners(prev => prev.map(p =>
+        p.id === id ? { ...p, ...updates } : p
+      ));
+    } catch (err) {
+      console.error('Error updating partner:', err);
+      alert('Không thể cập nhật đối tác. Vui lòng thử lại.');
+    }
+  };
+
+  const handleDeletePartner = async (id: string) => {
+    try {
+      await partnersAPI.delete(id);
+      setPartners(prev => prev.filter(p => p.id !== id));
+    } catch (err) {
+      console.error('Error deleting partner:', err);
+      alert('Không thể xóa đối tác. Vui lòng thử lại.');
+    }
+  };
+
   const updatePartnerStats = (partnerName: string, amount: number, value: number) => {
     setPartners(prev => prev.map(p => {
       if (p.name.toLowerCase() === partnerName.toLowerCase()) {
@@ -152,7 +174,7 @@ const App: React.FC = () => {
       case 'inventory':
         return <Inventory materials={materials} transactions={transactions} onProduce={handleProduce} />;
       case 'partners':
-        return <Partners partners={partners} onAddPartner={handleAddPartner} />;
+        return <Partners partners={partners} onAddPartner={handleAddPartner} onUpdatePartner={handleUpdatePartner} onDeletePartner={handleDeletePartner} />;
       case 'import':
         return <ImportForm onImport={handleImport} partners={partners} />;
       case 'export':
