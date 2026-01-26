@@ -28,38 +28,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Initial load
     useEffect(() => {
+        let mounted = true;
+
+        // Failsafe: Force stop loading after 5 seconds to prevent infinite spinner
+        // This handles cases where Supabase might just hang due to network/config issues
+        const timeoutId = setTimeout(() => {
+            if (mounted) {
+                console.warn("Auth check timed out - forcing loading false");
+                setLoading(false);
+            }
+        }, 5000);
+
         async function loadUser() {
             try {
                 const current = await authAPI.getCurrentUser();
-                if (current) {
+                if (mounted && current) {
                     setUser(current.user);
                     setProfile(current.profile);
                 }
             } catch (error) {
                 console.error('Error loading user:', error);
             } finally {
-                setLoading(false);
+                if (mounted) {
+                    setLoading(false);
+                    clearTimeout(timeoutId);
+                }
             }
         }
         loadUser();
 
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (!mounted) return;
+
             if (session?.user) {
                 setUser(session.user);
                 // Reload profile on sign in
                 if (event === 'SIGNED_IN') {
-                    const current = await authAPI.getCurrentUser();
-                    setProfile(current?.profile);
+                    try {
+                        const current = await authAPI.getCurrentUser();
+                        if (mounted) setProfile(current?.profile);
+                    } catch (e) {
+                        console.error("Error fetching profile on signin:", e);
+                    }
                 }
             } else {
                 setUser(null);
                 setProfile(null);
             }
+            // Ensure loading is set to false when auth state settles
             setLoading(false);
+            clearTimeout(timeoutId);
         });
 
         return () => {
+            mounted = false;
+            clearTimeout(timeoutId);
             subscription.unsubscribe();
         };
     }, []);
