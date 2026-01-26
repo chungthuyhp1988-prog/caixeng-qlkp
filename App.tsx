@@ -6,10 +6,14 @@ import ImportForm from './components/ImportForm';
 import ExportForm from './components/ExportForm';
 import CashFlow from './components/CashFlow';
 import Partners from './components/Partners';
-import { Material, Transaction, TransactionType, MaterialType, Partner, ExpenseCategory } from './types';
+import Personnel from './components/Personnel';
+import Login from './components/Login';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { Material, Transaction, Partner } from './types';
 import { materialsAPI, partnersAPI, transactionsAPI } from './lib/api';
 
-const App: React.FC = () => {
+const MainApp: React.FC = () => {
+  const { user, loading: authLoading } = useAuth();
   const [currentView, setCurrentView] = useState('dashboard');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
@@ -23,6 +27,8 @@ const App: React.FC = () => {
   // Load data from Supabase on mount
   useEffect(() => {
     async function loadData() {
+      if (!user) return; // Don't load if not logged in
+
       try {
         setLoading(true);
         const [materialsData, partnersData, transactionsData] = await Promise.all([
@@ -42,7 +48,7 @@ const App: React.FC = () => {
       }
     }
     loadData();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -50,6 +56,7 @@ const App: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Handlers
   const handleAddPartner = async (newPartner: Omit<Partner, 'id' | 'totalVolume' | 'totalValue'>) => {
     try {
       const created = await partnersAPI.create(newPartner);
@@ -82,24 +89,10 @@ const App: React.FC = () => {
     }
   };
 
-  const updatePartnerStats = (partnerName: string, amount: number, value: number) => {
-    setPartners(prev => prev.map(p => {
-      if (p.name.toLowerCase() === partnerName.toLowerCase()) {
-        return {
-          ...p,
-          totalVolume: p.totalVolume + amount,
-          totalValue: p.totalValue + value
-        };
-      }
-      return p;
-    }));
-  };
-
   const handleAddTransaction = (newTransaction: Transaction) => {
     setTransactions(prev => [newTransaction, ...prev]);
   };
 
-  // Handler: Nhập kho
   const handleImport = async (amount: number, price: number, supplier: string) => {
     try {
       await transactionsAPI.createImport({
@@ -109,7 +102,6 @@ const App: React.FC = () => {
         pricePerKg: price
       });
 
-      // Reload data to reflect trigger updates
       const [materialsData, partnersData, transactionsData] = await Promise.all([
         materialsAPI.getAll(),
         partnersAPI.getAll(),
@@ -126,7 +118,6 @@ const App: React.FC = () => {
     }
   };
 
-  // Handler: Xuất kho
   const handleExport = async (amount: number, price: number, customer: string) => {
     try {
       await transactionsAPI.createExport({
@@ -136,7 +127,6 @@ const App: React.FC = () => {
         pricePerKg: price
       });
 
-      // Reload data to reflect trigger updates
       const [materialsData, partnersData, transactionsData] = await Promise.all([
         materialsAPI.getAll(),
         partnersAPI.getAll(),
@@ -157,7 +147,6 @@ const App: React.FC = () => {
     try {
       await transactionsAPI.delete(id);
 
-      // Reload all data to ensure stock/money stats are correct (triggers will handle DB, we reload UI)
       const [materialsData, partnersData, transactionsData] = await Promise.all([
         materialsAPI.getAll(),
         partnersAPI.getAll(),
@@ -186,12 +175,10 @@ const App: React.FC = () => {
     }
   };
 
-  // Handler: Sản Xuất
   const handleProduce = async (scrapAmount: number) => {
     try {
       await transactionsAPI.createProduction(scrapAmount);
 
-      // Reload materials to reflect trigger updates
       const materialsData = await materialsAPI.getAll();
       setMaterials(materialsData);
     } catch (err) {
@@ -214,12 +201,28 @@ const App: React.FC = () => {
         return <ExportForm materials={materials} onExport={handleExport} partners={partners} />;
       case 'finance':
         return <CashFlow transactions={transactions} onAddTransaction={handleAddTransaction} onDeleteTransaction={handleDeleteTransaction} onUpdateExpense={handleUpdateExpense} />;
+      case 'personnel':
+        return <Personnel />;
       default:
         return <Dashboard materials={materials} transactions={transactions} />;
     }
   };
 
-  // Show loading state
+  // Auth Loading
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-950">
+        <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Require Login
+  if (!user) {
+    return <Login />;
+  }
+
+  // App Data Loading
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-950">
@@ -231,7 +234,6 @@ const App: React.FC = () => {
     );
   }
 
-  // Show error state
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-950 p-4">
@@ -273,6 +275,14 @@ const App: React.FC = () => {
         </div>
       </main>
     </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <MainApp />
+    </AuthProvider>
   );
 };
 

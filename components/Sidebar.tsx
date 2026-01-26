@@ -1,5 +1,6 @@
 import React from 'react';
-import { LayoutDashboard, Package, ArrowDownToLine, ArrowUpFromLine, Settings, Recycle, Wallet, Users } from 'lucide-react';
+import { LayoutDashboard, Package, ArrowDownToLine, ArrowUpFromLine, Settings, Recycle, Wallet, Users, LogOut, Briefcase } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface SidebarProps {
   currentView: string;
@@ -8,6 +9,8 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isMobile }) => {
+  const { logout, user, isAdmin } = useAuth();
+
   const menuItems = [
     { id: 'dashboard', label: 'Tổng Quan', mobileLabel: 'Tổng quan', icon: <LayoutDashboard size={20} /> },
     { id: 'inventory', label: 'Kho Hàng', mobileLabel: 'Kho', icon: <Package size={20} /> },
@@ -17,8 +20,15 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isMobile
     { id: 'finance', label: 'Sổ Thu Chi', mobileLabel: 'ThuChi', icon: <Wallet size={20} /> },
   ];
 
-  const handleSettings = () => {
-    alert("Tính năng cài đặt đang được phát triển.");
+  // Add Personnel menu for Admins
+  if (isAdmin) {
+    menuItems.push({ id: 'personnel', label: 'Nhân Sự', mobileLabel: 'Nhân sự', icon: <Briefcase size={20} /> });
+  }
+
+  const handleLogout = async () => {
+    if (window.confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+      await logout();
+    }
   };
 
   const content = (
@@ -33,16 +43,25 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isMobile
         </div>
       </div>
 
-      <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto custom-scrollbar">
+      <div className="px-6 py-2">
+        <div className="bg-slate-800 rounded-lg p-3 border border-slate-700">
+          <p className="text-xs text-slate-400 mb-1">Xin chào,</p>
+          <p className="text-sm font-bold truncate">{user?.email}</p>
+          <div className="mt-1 inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-slate-700 text-slate-300 uppercase">
+            {isAdmin ? 'Quản lý' : 'Nhân viên'}
+          </div>
+        </div>
+      </div>
+
+      <nav className="flex-1 px-4 py-2 space-y-2 overflow-y-auto custom-scrollbar">
         {menuItems.map((item) => (
           <button
             key={item.id}
             onClick={() => setCurrentView(item.id)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative ${
-              currentView === item.id
-                ? 'bg-primary-600 text-white shadow-md shadow-primary-900/20'
-                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-            }`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative ${currentView === item.id
+              ? 'bg-primary-600 text-white shadow-md shadow-primary-900/20'
+              : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+              }`}
           >
             <span className={currentView === item.id ? 'text-white' : 'text-slate-400 group-hover:text-white transition-colors'}>
               {item.icon}
@@ -55,13 +74,20 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isMobile
         ))}
       </nav>
 
-      <div className="p-4 border-t border-slate-800">
-        <button 
-          onClick={handleSettings}
+      <div className="p-4 border-t border-slate-800 space-y-2">
+        <button
+          onClick={() => alert("Tính năng đang phát triển")}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
         >
           <Settings size={20} />
           <span className="font-medium text-sm">Cài đặt</span>
+        </button>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors"
+        >
+          <LogOut size={20} />
+          <span className="font-medium text-sm">Đăng xuất</span>
         </button>
       </div>
     </div>
@@ -69,28 +95,19 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isMobile
 
   if (isMobile) {
     return (
-      <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 flex justify-between px-2 py-2 z-50 shadow-2xl safe-area-pb">
-         {menuItems.slice(0, 5).map((item) => (
+      <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 flex justify-between px-2 py-2 z-50 shadow-2xl safe-area-pb overflow-x-auto">
+        {menuItems.map((item) => (
           <button
             key={item.id}
             onClick={() => setCurrentView(item.id)}
-            className={`flex flex-col items-center justify-center p-2 rounded-xl flex-1 transition-all active:scale-95 ${
-              currentView === item.id ? 'text-primary-500 bg-primary-500/10' : 'text-slate-500'
-            }`}
+            className={`flex flex-col items-center justify-center p-2 rounded-xl flex-1 min-w-[60px] transition-all active:scale-95 ${currentView === item.id ? 'text-primary-500 bg-primary-500/10' : 'text-slate-500'
+              }`}
           >
-            {React.cloneElement(item.icon as React.ReactElement, { size: 20 })}
+            {React.cloneElement(item.icon as any, { size: 20 })}
             <span className="text-[10px] mt-1 font-medium whitespace-nowrap">{item.mobileLabel}</span>
           </button>
         ))}
-         <button
-            onClick={() => setCurrentView('finance')}
-            className={`flex flex-col items-center justify-center p-2 rounded-xl flex-1 transition-all active:scale-95 ${
-              currentView === 'finance' ? 'text-primary-500 bg-primary-500/10' : 'text-slate-500'
-            }`}
-          >
-            <Wallet size={20} />
-            <span className="text-[10px] mt-1 font-medium whitespace-nowrap">ThuChi</span>
-          </button>
+        {/* Mobile Logout could be in a separate more menu, but for now kept simple */}
       </div>
     );
   }
