@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
-import { Search, Settings, Package, Layers, AlertTriangle, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Search, Settings, Package, Layers, AlertTriangle, CheckCircle2, ArrowRight, History, ArrowDownCircle, ArrowUpCircle, Clock } from 'lucide-react';
 import { formatCurrency } from '../constants';
-import { MaterialType, Material } from '../types';
+import { MaterialType, Material, Transaction, TransactionType } from '../types';
 
 interface InventoryProps {
   materials: Material[];
+  transactions: Transaction[];
   onProduce: (scrapAmount: number) => void;
 }
 
-const Inventory: React.FC<InventoryProps> = ({ materials, onProduce }) => {
+const Inventory: React.FC<InventoryProps> = ({ materials, transactions, onProduce }) => {
   const [filter, setFilter] = useState<'ALL' | MaterialType>('ALL');
   const [search, setSearch] = useState('');
   const [showProduceModal, setShowProduceModal] = useState(false);
   const [produceAmount, setProduceAmount] = useState('');
+  const [historyTab, setHistoryTab] = useState<'IMPORT' | 'EXPORT'>('IMPORT');
 
   const filteredMaterials = materials.filter(m => {
     const matchesFilter = filter === 'ALL' || m.type === filter;
@@ -48,9 +50,9 @@ const Inventory: React.FC<InventoryProps> = ({ materials, onProduce }) => {
         <div className="flex items-center gap-3 w-full md:w-auto">
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Tìm mã hoặc tên..." 
+            <input
+              type="text"
+              placeholder="Tìm mã hoặc tên..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="bg-slate-800 border border-slate-700 text-white pl-10 pr-4 py-2 rounded-xl focus:outline-none focus:border-primary-500 w-full md:w-64"
@@ -61,19 +63,19 @@ const Inventory: React.FC<InventoryProps> = ({ materials, onProduce }) => {
 
       {/* Tabs */}
       <div className="flex gap-2 border-b border-slate-800 pb-1 overflow-x-auto no-scrollbar">
-        <button 
+        <button
           onClick={() => setFilter('ALL')}
           className={`px-4 py-2 text-sm font-medium whitespace-nowrap rounded-t-lg transition-colors border-b-2 ${filter === 'ALL' ? 'border-primary-500 text-primary-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
         >
           Tất cả
         </button>
-        <button 
+        <button
           onClick={() => setFilter(MaterialType.SCRAP)}
           className={`px-4 py-2 text-sm font-medium whitespace-nowrap rounded-t-lg transition-colors border-b-2 ${filter === MaterialType.SCRAP ? 'border-primary-500 text-primary-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
         >
           Nhựa Phế
         </button>
-        <button 
+        <button
           onClick={() => setFilter(MaterialType.POWDER)}
           className={`px-4 py-2 text-sm font-medium whitespace-nowrap rounded-t-lg transition-colors border-b-2 ${filter === MaterialType.POWDER ? 'border-primary-500 text-primary-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
         >
@@ -107,12 +109,12 @@ const Inventory: React.FC<InventoryProps> = ({ materials, onProduce }) => {
                   </div>
                 </div>
               </div>
-                
+
               <div className="grid grid-cols-2 gap-6 my-6">
                 <div>
                   <p className="text-slate-500 text-xs uppercase font-bold tracking-wider mb-1">Tồn kho</p>
                   <p className={`text-3xl font-bold tracking-tight ${isLowStock ? 'text-red-400' : 'text-white'}`}>
-                    {material.stock.toLocaleString('vi-VN')} 
+                    {material.stock.toLocaleString('vi-VN')}
                     <span className="text-lg font-normal text-slate-500 ml-1">{material.unit}</span>
                   </p>
                 </div>
@@ -124,24 +126,115 @@ const Inventory: React.FC<InventoryProps> = ({ materials, onProduce }) => {
               </div>
 
               <div className="pt-4 border-t border-slate-700">
-                  {isScrap ? (
-                    <button 
+                {isScrap ? (
+                  <button
                     onClick={() => setShowProduceModal(true)}
                     className="w-full bg-primary-600 hover:bg-primary-500 text-white py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary-600/20 hover:scale-[1.02] active:scale-[0.98]"
-                    >
-                      <Settings size={18} />
-                      Sản Xuất (Xay Nhựa)
-                    </button>
-                  ) : (
-                    <div className="w-full py-3 flex items-center justify-center gap-2 text-emerald-400 bg-emerald-500/10 rounded-xl text-sm font-medium border border-emerald-500/20">
-                      <CheckCircle2 size={16} />
-                      Sẵn sàng xuất bán
-                    </div>
-                  )}
+                  >
+                    <Settings size={18} />
+                    Sản Xuất (Xay Nhựa)
+                  </button>
+                ) : (
+                  <div className="w-full py-3 flex items-center justify-center gap-2 text-emerald-400 bg-emerald-500/10 rounded-xl text-sm font-medium border border-emerald-500/20">
+                    <CheckCircle2 size={16} />
+                    Sẵn sàng xuất bán
+                  </div>
+                )}
               </div>
             </div>
           );
         })}
+      </div>
+
+      {/* Import/Export History Section */}
+      <div className="mt-8 bg-slate-800/50 rounded-2xl border border-slate-700 p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-primary-500/10 flex items-center justify-center">
+            <History size={20} className="text-primary-400" />
+          </div>
+          <h3 className="text-lg font-bold text-white">Lịch Sử Giao Dịch</h3>
+        </div>
+
+        {/* History Tabs */}
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setHistoryTab('IMPORT')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${historyTab === 'IMPORT'
+                ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'
+              }`}
+          >
+            <ArrowDownCircle size={16} />
+            Lịch sử Nhập
+          </button>
+          <button
+            onClick={() => setHistoryTab('EXPORT')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${historyTab === 'EXPORT'
+                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'
+              }`}
+          >
+            <ArrowUpCircle size={16} />
+            Lịch sử Xuất
+          </button>
+        </div>
+
+        {/* History List */}
+        <div className="space-y-2 max-h-80 overflow-y-auto">
+          {transactions
+            .filter(t => t.type === (historyTab === 'IMPORT' ? TransactionType.IMPORT : TransactionType.EXPORT))
+            .slice(0, 20)
+            .map((transaction) => (
+              <div
+                key={transaction.id}
+                className={`flex items-center justify-between p-4 rounded-xl border transition-all hover:scale-[1.01] ${historyTab === 'IMPORT'
+                    ? 'bg-orange-500/5 border-orange-500/20'
+                    : 'bg-blue-500/5 border-blue-500/20'
+                  }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${historyTab === 'IMPORT' ? 'bg-orange-500/10' : 'bg-blue-500/10'
+                    }`}>
+                    {historyTab === 'IMPORT' ? (
+                      <ArrowDownCircle size={20} className="text-orange-400" />
+                    ) : (
+                      <ArrowUpCircle size={20} className="text-blue-400" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-white font-medium">
+                      {transaction.partnerName || 'Không xác định'}
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <Clock size={12} />
+                      {new Date(transaction.date).toLocaleDateString('vi-VN', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className={`font-bold ${historyTab === 'IMPORT' ? 'text-orange-400' : 'text-blue-400'}`}>
+                    {historyTab === 'IMPORT' ? '+' : '-'}{transaction.weight?.toLocaleString('vi-VN')} kg
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {formatCurrency(transaction.totalValue)}
+                  </p>
+                </div>
+              </div>
+            ))}
+
+          {transactions.filter(t => t.type === (historyTab === 'IMPORT' ? TransactionType.IMPORT : TransactionType.EXPORT)).length === 0 && (
+            <div className="text-center py-8 text-slate-500">
+              <History size={32} className="mx-auto mb-2 opacity-50" />
+              <p>Chưa có giao dịch {historyTab === 'IMPORT' ? 'nhập' : 'xuất'} nào</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Production Modal */}
@@ -150,13 +243,13 @@ const Inventory: React.FC<InventoryProps> = ({ materials, onProduce }) => {
           <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 w-full max-w-md shadow-2xl scale-100">
             <h3 className="text-xl font-bold text-white mb-2">Quy trình Xay Nhựa</h3>
             <p className="text-slate-400 text-sm mb-6">Chuyển đổi từ <span className="text-orange-400 font-bold">Phế Liệu</span> sang <span className="text-blue-400 font-bold">Bột Nhựa</span>.</p>
-            
+
             <form onSubmit={handleProduceSubmit}>
               <div className="mb-4">
                 <label className="block text-slate-300 text-sm font-medium mb-2">Khối lượng phế đưa vào (kg)</label>
                 <div className="relative">
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     required
                     min="1"
                     max={scrapStock}
@@ -180,7 +273,7 @@ const Inventory: React.FC<InventoryProps> = ({ materials, onProduce }) => {
                   <div className="flex justify-between items-center pt-2 border-t border-slate-700/50">
                     <span className="text-white font-medium">Thu được bột:</span>
                     <span className="text-primary-400 font-bold text-xl flex items-center gap-2">
-                      <ArrowRight size={18} className="text-slate-600"/>
+                      <ArrowRight size={18} className="text-slate-600" />
                       {(Number(produceAmount) * 0.95).toFixed(1)} kg
                     </span>
                   </div>
@@ -188,15 +281,15 @@ const Inventory: React.FC<InventoryProps> = ({ materials, onProduce }) => {
               )}
 
               <div className="flex gap-3 mt-6">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setShowProduceModal(false)}
                   className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium transition-colors"
                 >
                   Đóng
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="flex-1 py-3 bg-primary-600 hover:bg-primary-500 text-white rounded-xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={!produceAmount || Number(produceAmount) <= 0 || Number(produceAmount) > scrapStock}
                 >

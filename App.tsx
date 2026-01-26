@@ -150,7 +150,7 @@ const App: React.FC = () => {
       case 'dashboard':
         return <Dashboard materials={materials} transactions={transactions} />;
       case 'inventory':
-        return <Inventory materials={materials} onProduce={handleProduce} />;
+        return <Inventory materials={materials} transactions={transactions} onProduce={handleProduce} />;
       case 'partners':
         return <Partners partners={partners} onAddPartner={handleAddPartner} />;
       case 'import':
