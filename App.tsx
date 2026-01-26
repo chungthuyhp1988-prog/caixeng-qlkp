@@ -26,28 +26,50 @@ const MainApp: React.FC = () => {
 
   // Load data from Supabase on mount
   useEffect(() => {
+    let mounted = true;
+
     async function loadData() {
       if (!user) return; // Don't load if not logged in
 
+      // Failsafe timeout
+      const timeoutId = setTimeout(() => {
+        if (mounted) {
+          setError('Kết nối quá hạn. Vui lòng kiểm tra mạng hoặc thử lại.');
+          setLoading(false);
+        }
+      }, 10000);
+
       try {
-        setLoading(true);
+        if (mounted) setLoading(true);
         const [materialsData, partnersData, transactionsData] = await Promise.all([
           materialsAPI.getAll(),
           partnersAPI.getAll(),
           transactionsAPI.getAll()
         ]);
-        setMaterials(materialsData);
-        setPartners(partnersData);
-        setTransactions(transactionsData);
-        setError(null);
+
+        if (mounted) {
+          setMaterials(materialsData);
+          setPartners(partnersData);
+          setTransactions(transactionsData);
+          setError(null);
+        }
       } catch (err) {
         console.error('Error loading data:', err);
-        setError('Không thể kết nối đến database. Vui lòng kiểm tra cấu hình Supabase.');
+        if (mounted) {
+          setError('Không thể kết nối đến database. Vui lòng kiểm tra cấu hình Supabase.');
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          clearTimeout(timeoutId);
+          setLoading(false);
+        }
       }
     }
     loadData();
+
+    return () => {
+      mounted = false;
+    };
   }, [user]);
 
   useEffect(() => {
