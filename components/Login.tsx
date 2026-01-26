@@ -44,7 +44,7 @@ const Login = () => {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-700/50 mb-4 border border-slate-600 shadow-inner">
                         <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-lg shadow-lg shadow-primary-500/30"></div>
                     </div>
-                    <h1 className="text-3xl font-bold text-white mb-2">QA.QLKP</h1>
+                    <h1 className="text-3xl font-bold text-white mb-2">KHO PHẾ THANH NAM</h1>
                     <p className="text-slate-400">Đăng nhập hệ thống</p>
                 </div>
 

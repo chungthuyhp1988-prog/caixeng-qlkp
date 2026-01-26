@@ -265,7 +265,7 @@ const MainApp: React.FC = () => {
       <main className="flex-1 p-4 md:p-8 overflow-x-hidden w-full">
         {isMobile && (
           <div className="flex items-center justify-between mb-6">
-            <h1 className="font-bold text-xl text-white">EcoPlast</h1>
+            <h1 className="font-bold text-xl text-white">KHO PHẾ THANH NAM</h1>
             <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700"></div>
           </div>
         )}

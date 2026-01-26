@@ -38,7 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isMobile
           <Recycle className="text-white" size={24} />
         </div>
         <div>
-          <h1 className="font-bold text-lg tracking-tight">EcoPlast</h1>
+          <h1 className="font-bold text-lg tracking-tight">KHO PHẾ THANH NAM</h1>
           <p className="text-xs text-slate-400">Quản lý kho tái chế</p>
         </div>
       </div>
