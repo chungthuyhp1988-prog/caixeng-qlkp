@@ -9,7 +9,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isMobile }) => {
-  const { logout, user, isAdmin } = useAuth();
+  const { logout, user, isAdmin, profile } = useAuth();
 
   const menuItems = [
     { id: 'dashboard', label: 'Tổng Quan', mobileLabel: 'Tổng quan', icon: <LayoutDashboard size={20} /> },
@@ -46,7 +46,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isMobile
       <div className="px-6 py-2">
         <div className="bg-slate-800 rounded-lg p-3 border border-slate-700">
           <p className="text-xs text-slate-400 mb-1">Xin chào,</p>
-          <p className="text-sm font-bold truncate">{user?.email}</p>
+          <p className="text-sm font-bold truncate">{profile?.full_name || user?.email}</p>
           <div className="mt-1 inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-slate-700 text-slate-300 uppercase">
             {isAdmin ? 'Quản lý' : 'Nhân viên'}
           </div>

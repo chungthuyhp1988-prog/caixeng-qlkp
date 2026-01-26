@@ -10,6 +10,7 @@ interface AuthContextType {
     isAdmin: boolean;
     login: (email: string) => Promise<any>;
     logout: () => Promise<void>;
+    refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -19,6 +20,7 @@ const AuthContext = createContext<AuthContextType>({
     isAdmin: false,
     login: async () => { },
     logout: async () => { },
+    refreshProfile: async () => { },
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -100,8 +102,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const isAdmin = profile?.role === 'ADMIN';
 
+    const refreshProfile = async () => {
+        try {
+            const current = await authAPI.getCurrentUser();
+            setProfile(current?.profile);
+        } catch (e) {
+            console.error("Error refreshing profile:", e);
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, profile, loading, isAdmin, login, logout }}>
+        <AuthContext.Provider value={{ user, profile, loading, isAdmin, login, logout, refreshProfile }}>
             {children}
         </AuthContext.Provider>
     );

@@ -14,7 +14,10 @@ interface Staff {
     joinedAt: string;
 }
 
+import { useAuth } from '../contexts/AuthContext';
+
 const Personnel = () => {
+    const { user, refreshProfile } = useAuth();
     const [staff, setStaff] = useState<Staff[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -81,6 +84,12 @@ const Personnel = () => {
                     role,
                     status: editingStaff.status
                 });
+
+                // If updating self, refresh profile context
+                if (user && editingStaff.id === user.id) {
+                    await refreshProfile();
+                }
+
                 alert('Cập nhật thành công!');
             } else {
                 // Add new
