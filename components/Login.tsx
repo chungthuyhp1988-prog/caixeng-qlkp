@@ -1,26 +1,33 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Lock, Mail, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+import { Lock, Mail, ArrowRight, AlertCircle, Loader2, Phone } from 'lucide-react';
+import { authAPI } from '../lib/api';
 
 const Login = () => {
     const { login } = useAuth();
-    const [email, setEmail] = useState('');
+    const [identifier, setIdentifier] = useState('');
+    const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
-        setSuccess(false);
 
         try {
-            await login(email);
-            setSuccess(true);
+            // Logic: Nếu là số điện thoại (10 số), tự động thêm @qlkp.com
+            let emailToUse = identifier;
+            const isPhoneNumber = /^\d{10}$/.test(identifier);
+
+            if (isPhoneNumber) {
+                emailToUse = `${identifier}@qlkp.com`;
+            }
+
+            await authAPI.loginWithPassword(emailToUse, password);
         } catch (err: any) {
             console.error('Login error:', err);
-            setError(err.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.');
+            setError(err.message || 'Tên đăng nhập hoặc mật khẩu không đúng.');
         } finally {
             setLoading(false);
         }
@@ -38,72 +45,73 @@ const Login = () => {
                         <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-lg shadow-lg shadow-primary-500/30"></div>
                     </div>
                     <h1 className="text-3xl font-bold text-white mb-2">QA.QLKP</h1>
-                    <p className="text-slate-400">Hệ thống quản lý kho & sản xuất</p>
+                    <p className="text-slate-400">Đăng nhập hệ thống</p>
                 </div>
 
-                {success ? (
-                    <div className="text-center animate-in fade-in zoom-in duration-300">
-                        <div className="bg-green-500/20 text-green-400 p-6 rounded-2xl border border-green-500/30 mb-6">
-                            <Mail className="w-12 h-12 mx-auto mb-3" />
-                            <h3 className="text-xl font-bold mb-2">Kiểm tra Email</h3>
-                            <p className="text-sm">Chúng tôi đã gửi Magic Link đăng nhập vào email <strong>{email}</strong>.</p>
+                <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+                    {error && (
+                        <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-xl flex items-center gap-3 text-sm">
+                            <AlertCircle size={18} />
+                            {error}
                         </div>
-                        <button
-                            onClick={() => setSuccess(false)}
-                            className="text-slate-400 hover:text-white text-sm"
-                        >
-                            Quay lại đăng nhập
-                        </button>
+                    )}
+
+                    <div>
+                        <label className="block text-slate-300 text-sm font-medium mb-2 pl-1">Email hoặc Số điện thoại</label>
+                        <div className="relative group">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary-400 transition-colors">
+                                {/^\d+$/.test(identifier) ? <Phone size={20} /> : <Mail size={20} />}
+                            </div>
+                            <input
+                                type="text"
+                                required
+                                value={identifier}
+                                onChange={(e) => setIdentifier(e.target.value)}
+                                className="w-full bg-slate-900 border border-slate-600 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-primary-500 transition-all shadow-sm"
+                                placeholder="0912345678 hoặc email@qlkp.com"
+                            />
+                        </div>
                     </div>
-                ) : (
-                    <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
-                        {error && (
-                            <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-xl flex items-center gap-3 text-sm">
-                                <AlertCircle size={18} />
-                                {error}
-                            </div>
+
+                    <div>
+                        <label className="block text-slate-300 text-sm font-medium mb-2 pl-1">Mật khẩu</label>
+                        <div className="relative group">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary-400 transition-colors" size={20} />
+                            <input
+                                type="password"
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full bg-slate-900 border border-slate-600 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-primary-500 transition-all shadow-sm"
+                                placeholder="••••••••"
+                            />
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary-600/25 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed group active:scale-[0.98]"
+                    >
+                        {loading ? (
+                            <>
+                                <Loader2 size={20} className="animate-spin" />
+                                Đang xử lý...
+                            </>
+                        ) : (
+                            <>
+                                Đăng Nhập
+                                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                            </>
                         )}
+                    </button>
 
-                        <div>
-                            <label className="block text-slate-300 text-sm font-medium mb-2 pl-1">Email đăng nhập</label>
-                            <div className="relative group">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary-400 transition-colors" size={20} />
-                                <input
-                                    type="email"
-                                    required
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full bg-slate-900 border border-slate-600 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-primary-500 transition-all shadow-sm"
-                                    placeholder="nhanvien@qa.qlkp.com"
-                                />
-                            </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary-600/25 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed group active:scale-[0.98]"
-                        >
-                            {loading ? (
-                                <>
-                                    <Loader2 size={20} className="animate-spin" />
-                                    Đang xử lý...
-                                </>
-                            ) : (
-                                <>
-                                    Đăng Nhập
-                                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                                </>
-                            )}
-                        </button>
-
-                        <div className="text-center">
-                            <p className="text-xs text-slate-500">
-                                Liên hệ Admin nếu chưa có tài khoản
-                            </p>
-                        </div>
-                    </form>
-                )}
+                    <div className="text-center">
+                        <p className="text-xs text-slate-500">
+                            Liên hệ Admin để cấp tài khoản
+                        </p>
+                    </div>
+                </form>
             </div>
         </div>
     );
