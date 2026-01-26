@@ -170,6 +170,9 @@ export const transactionsAPI = {
     /**
      * Lấy tất cả transactions với join materials & partners
      */
+    /**
+     * Lấy tất cả transactions với join materials, partners & users (người tạo)
+     */
     getAll: async (): Promise<Transaction[]> => {
         const { data, error } = await supabase
             .from('transactions')
@@ -183,14 +186,16 @@ export const transactionsAPI = {
         total_value,
         category,
         note,
+        created_by,
         materials (name),
-        partners (name)
+        partners (name),
+        users (full_name, email)
       `)
             .order('transaction_date', { ascending: false });
 
         if (error) throw error;
 
-        return data.map(item => ({
+        return data.map((item: any) => ({
             id: item.id,
             date: item.transaction_date,
             type: item.type as TransactionType,
@@ -200,7 +205,8 @@ export const transactionsAPI = {
             weight: item.weight ? Number(item.weight) : undefined,
             totalValue: Number(item.total_value),
             category: item.category as ExpenseCategory | undefined,
-            note: item.note || undefined
+            note: item.note || undefined,
+            createdBy: item.users?.full_name || item.users?.email || 'Hệ thống'
         }));
     },
 

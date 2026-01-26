@@ -42,6 +42,7 @@ export interface Transaction {
   totalValue: number;
   category?: ExpenseCategory; // Only for expenses
   note?: string;
+  createdBy?: string;
 }
 
 export interface Partner {

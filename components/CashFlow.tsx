@@ -258,6 +258,11 @@ const CashFlow: React.FC<CashFlowProps> = ({ transactions, onAddTransaction, onD
                         {new Date(t.date).toLocaleDateString('vi-VN')}
                       </span>
                     </div>
+                    {t.createdBy && (
+                      <p className="text-[10px] text-slate-500 mt-0.5 ml-0.5">
+                        Bởi: <span className="font-medium text-slate-400">{t.createdBy}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
 

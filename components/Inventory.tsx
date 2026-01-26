@@ -217,6 +217,11 @@ const Inventory: React.FC<InventoryProps> = ({ materials, transactions, onProduc
                         minute: '2-digit'
                       })}
                     </div>
+                    {transaction.createdBy && (
+                      <p className="text-[10px] text-slate-500 mt-1">
+                        Bởi: <span className="text-slate-400 font-medium">{transaction.createdBy}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
