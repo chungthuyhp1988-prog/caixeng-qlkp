@@ -6,17 +6,43 @@ import ImportForm from './components/ImportForm';
 import ExportForm from './components/ExportForm';
 import CashFlow from './components/CashFlow';
 import Partners from './components/Partners';
-import { MOCK_MATERIALS, MOCK_TRANSACTIONS, MOCK_PARTNERS } from './constants';
 import { Material, Transaction, TransactionType, MaterialType, Partner, ExpenseCategory } from './types';
+import { materialsAPI, partnersAPI, transactionsAPI } from './lib/api';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState('dashboard');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  
+
   // Application State
-  const [materials, setMaterials] = useState<Material[]>(MOCK_MATERIALS);
-  const [transactions, setTransactions] = useState<Transaction[]>(MOCK_TRANSACTIONS);
-  const [partners, setPartners] = useState<Partner[]>(MOCK_PARTNERS);
+  const [materials, setMaterials] = useState<Material[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load data from Supabase on mount
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true);
+        const [materialsData, partnersData, transactionsData] = await Promise.all([
+          materialsAPI.getAll(),
+          partnersAPI.getAll(),
+          transactionsAPI.getAll()
+        ]);
+        setMaterials(materialsData);
+        setPartners(partnersData);
+        setTransactions(transactionsData);
+        setError(null);
+      } catch (err) {
+        console.error('Error loading data:', err);
+        setError('Không thể kết nối đến database. Vui lòng kiểm tra cấu hình Supabase.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -24,8 +50,14 @@ const App: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleAddPartner = (newPartner: Partner) => {
-    setPartners(prev => [newPartner, ...prev]);
+  const handleAddPartner = async (newPartner: Omit<Partner, 'id' | 'totalVolume' | 'totalValue'>) => {
+    try {
+      const created = await partnersAPI.create(newPartner);
+      setPartners(prev => [created, ...prev]);
+    } catch (err) {
+      console.error('Error adding partner:', err);
+      alert('Không thể thêm đối tác. Vui lòng thử lại.');
+    }
   };
 
   const updatePartnerStats = (partnerName: string, amount: number, value: number) => {
@@ -46,83 +78,71 @@ const App: React.FC = () => {
   };
 
   // Handler: Nhập kho
-  const handleImport = (amount: number, price: number, supplier: string) => {
-    const totalValue = amount * price;
-    
-    // 1. Update Material Stock (Scrap)
-    setMaterials(prev => prev.map(m => {
-      if (m.type === MaterialType.SCRAP) {
-        return { ...m, stock: m.stock + amount };
-      }
-      return m;
-    }));
+  const handleImport = async (amount: number, price: number, supplier: string) => {
+    try {
+      await transactionsAPI.createImport({
+        materialCode: 'PHE-LIEU',
+        partnerName: supplier,
+        weight: amount,
+        pricePerKg: price
+      });
 
-    // 2. Add Transaction
-    const newTransaction: Transaction = {
-      id: `t-${Date.now()}`,
-      date: new Date().toISOString(),
-      type: TransactionType.IMPORT,
-      category: ExpenseCategory.MATERIAL, // Auto categorize as Material
-      materialId: 'scrap',
-      materialName: 'Nhựa Phế Liệu',
-      partnerName: supplier,
-      weight: amount,
-      totalValue: totalValue
-    };
-    setTransactions(prev => [newTransaction, ...prev]);
-    
-    // 3. Update Partner Stats
-    updatePartnerStats(supplier, amount, totalValue);
+      // Reload data to reflect trigger updates
+      const [materialsData, partnersData, transactionsData] = await Promise.all([
+        materialsAPI.getAll(),
+        partnersAPI.getAll(),
+        transactionsAPI.getAll()
+      ]);
+      setMaterials(materialsData);
+      setPartners(partnersData);
+      setTransactions(transactionsData);
 
-    // 4. Navigate
-    setCurrentView('inventory');
+      setCurrentView('inventory');
+    } catch (err) {
+      console.error('Error importing:', err);
+      alert('Không thể thực hiện nhập kho. Vui lòng thử lại.');
+    }
   };
 
   // Handler: Xuất kho
-  const handleExport = (amount: number, price: number, customer: string) => {
-    const totalValue = amount * price;
+  const handleExport = async (amount: number, price: number, customer: string) => {
+    try {
+      await transactionsAPI.createExport({
+        materialCode: 'BOT-NHUA',
+        partnerName: customer,
+        weight: amount,
+        pricePerKg: price
+      });
 
-    // 1. Update Material Stock (Powder)
-    setMaterials(prev => prev.map(m => {
-      if (m.type === MaterialType.POWDER) {
-        return { ...m, stock: m.stock - amount };
-      }
-      return m;
-    }));
+      // Reload data to reflect trigger updates
+      const [materialsData, partnersData, transactionsData] = await Promise.all([
+        materialsAPI.getAll(),
+        partnersAPI.getAll(),
+        transactionsAPI.getAll()
+      ]);
+      setMaterials(materialsData);
+      setPartners(partnersData);
+      setTransactions(transactionsData);
 
-    // 2. Add Transaction
-    const newTransaction: Transaction = {
-      id: `t-${Date.now()}`,
-      date: new Date().toISOString(),
-      type: TransactionType.EXPORT,
-      materialId: 'powder',
-      materialName: 'Bột Nhựa Thành Phẩm',
-      partnerName: customer,
-      weight: amount,
-      totalValue: totalValue
-    };
-    setTransactions(prev => [newTransaction, ...prev]);
-
-    // 3. Update Partner Stats
-    updatePartnerStats(customer, amount, totalValue);
-
-    // 4. Navigate
-    setCurrentView('inventory');
+      setCurrentView('inventory');
+    } catch (err) {
+      console.error('Error exporting:', err);
+      alert('Không thể thực hiện xuất kho. Vui lòng thử lại.');
+    }
   };
 
   // Handler: Sản Xuất
-  const handleProduce = (scrapAmount: number) => {
-    const powderAmount = scrapAmount * 0.95; 
+  const handleProduce = async (scrapAmount: number) => {
+    try {
+      await transactionsAPI.createProduction(scrapAmount);
 
-    setMaterials(prev => prev.map(m => {
-      if (m.type === MaterialType.SCRAP) {
-        return { ...m, stock: m.stock - scrapAmount };
-      }
-      if (m.type === MaterialType.POWDER) {
-        return { ...m, stock: m.stock + powderAmount };
-      }
-      return m;
-    }));
+      // Reload materials to reflect trigger updates
+      const materialsData = await materialsAPI.getAll();
+      setMaterials(materialsData);
+    } catch (err) {
+      console.error('Error producing:', err);
+      alert('Không thể thực hiện sản xuất. Vui lòng thử lại.');
+    }
   };
 
   const renderContent = () => {
@@ -144,14 +164,47 @@ const App: React.FC = () => {
     }
   };
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-950">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-400">Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-950 p-4">
+        <div className="bg-slate-800 border border-red-500/50 rounded-2xl p-8 max-w-md text-center">
+          <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-red-400 text-3xl">⚠️</span>
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Lỗi Kết Nối</h2>
+          <p className="text-slate-400 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-primary-600 hover:bg-primary-500 text-white px-6 py-2 rounded-xl font-medium"
+          >
+            Thử Lại
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex bg-slate-950 min-h-screen">
-      <Sidebar 
-        currentView={currentView} 
+      <Sidebar
+        currentView={currentView}
         setCurrentView={setCurrentView}
         isMobile={isMobile}
       />
-      
+
       <main className="flex-1 p-4 md:p-8 overflow-x-hidden w-full">
         {isMobile && (
           <div className="flex items-center justify-between mb-6">
