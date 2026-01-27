@@ -29,7 +29,14 @@ const MainApp: React.FC = () => {
     let mounted = true;
 
     async function loadData() {
-      if (!user) return; // Don't load if not logged in
+      // Wait for auth check to complete first
+      if (authLoading) return;
+
+      // Don't load if not logged in
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
       // Failsafe timeout
       const timeoutId = setTimeout(() => {
@@ -37,7 +44,7 @@ const MainApp: React.FC = () => {
           setError('Kết nối quá hạn. Vui lòng kiểm tra mạng hoặc thử lại.');
           setLoading(false);
         }
-      }, 10000);
+      }, 15000); // Increased to 15 seconds
 
       try {
         if (mounted) setLoading(true);
@@ -70,7 +77,8 @@ const MainApp: React.FC = () => {
     return () => {
       mounted = false;
     };
-  }, [user]);
+  }, [user, authLoading]); // Added authLoading dependency
+
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
