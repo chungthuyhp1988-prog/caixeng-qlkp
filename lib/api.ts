@@ -5,34 +5,48 @@ import { Material, Partner, Transaction, MaterialType, PartnerType, TransactionT
 // MATERIALS API
 // =====================================================
 
+// Helper for timeout
+const withTimeout = <T>(promise: PromiseLike<T>, ms: number = 8000): Promise<T> => {
+    return Promise.race([
+        Promise.resolve(promise),
+        new Promise<T>((_, reject) =>
+            setTimeout(() => reject(new Error(`Request timed out after ${ms}ms`)), ms)
+        )
+    ]);
+};
+
 export const materialsAPI = {
     /**
      * Lấy tất cả materials
      */
     getAll: async (): Promise<Material[]> => {
         console.log("API: materialsAPI.getAll called");
-        const { data, error } = await supabase
-            .from('materials')
-            .select('*')
-            .order('type', { ascending: true });
+        try {
+            const { data, error } = await withTimeout(supabase
+                .from('materials')
+                .select('*')
+                .order('type', { ascending: true })) as any; // Cast to any to avoid strict type checks on PostgrestResponse vs Promise
 
-        if (error) {
-            console.error("API: materialsAPI.getAll error", error);
-            throw error;
+            if (error) {
+                console.error("API: materialsAPI.getAll error", error);
+                throw error;
+            }
+
+            console.log("API: materialsAPI.getAll success", data?.length);
+            // Map database fields to frontend types
+            return (data || []).map((item: any) => ({
+                id: item.id,
+                code: item.code,
+                name: item.name,
+                type: item.type as MaterialType,
+                stock: Number(item.stock),
+                unit: item.unit,
+                pricePerKg: Number(item.price_per_kg)
+            }));
+        } catch (err) {
+            console.error("API: materialsAPI.getAll EXCEPTION", err);
+            throw err;
         }
-
-        console.log("API: materialsAPI.getAll success", data?.length);
-
-        // Map database fields to frontend types
-        return data.map(item => ({
-            id: item.id,
-            code: item.code,
-            name: item.name,
-            type: item.type as MaterialType,
-            stock: Number(item.stock),
-            unit: item.unit,
-            pricePerKg: Number(item.price_per_kg)
-        }));
     },
 
     /**
@@ -58,27 +72,32 @@ export const partnersAPI = {
      */
     getAll: async (): Promise<Partner[]> => {
         console.log("API: partnersAPI.getAll called");
-        const { data, error } = await supabase
-            .from('partners')
-            .select('*')
-            .order('created_at', { ascending: false });
+        try {
+            const { data, error } = await withTimeout(supabase
+                .from('partners')
+                .select('*')
+                .order('created_at', { ascending: false })) as any;
 
-        if (error) {
-            console.error("API: partnersAPI.getAll error", error);
-            throw error;
+            if (error) {
+                console.error("API: partnersAPI.getAll error", error);
+                throw error;
+            }
+
+            console.log("API: partnersAPI.getAll success", data?.length);
+
+            return (data || []).map((item: any) => ({
+                id: item.id,
+                name: item.name,
+                type: item.type as PartnerType,
+                phone: item.phone || '',
+                address: item.address || '',
+                totalVolume: Number(item.total_volume),
+                totalValue: Number(item.total_value)
+            }));
+        } catch (err) {
+            console.error("API: partnersAPI.getAll EXCEPTION", err);
+            throw err;
         }
-
-        console.log("API: partnersAPI.getAll success", data?.length);
-
-        return data.map(item => ({
-            id: item.id,
-            name: item.name,
-            type: item.type as PartnerType,
-            phone: item.phone || '',
-            address: item.address || '',
-            totalVolume: Number(item.total_volume),
-            totalValue: Number(item.total_value)
-        }));
     },
 
     /**
@@ -186,40 +205,51 @@ export const transactionsAPI = {
      * Lấy tất cả transactions với join materials, partners & users (người tạo)
      */
     getAll: async (): Promise<Transaction[]> => {
-        const { data, error } = await supabase
-            .from('transactions')
-            .select(`
-        id,
-        transaction_date,
-        type,
-        material_id,
-        partner_id,
-        weight,
-        total_value,
-        category,
-        note,
-        created_by,
-        materials (name),
-        partners (name),
-        users (full_name, email)
-      `)
-            .order('transaction_date', { ascending: false });
+        console.log("API: transactionsAPI.getAll called");
+        try {
+            const { data, error } = await withTimeout(supabase
+                .from('transactions')
+                .select(`
+            id,
+            transaction_date,
+            type,
+            material_id,
+            partner_id,
+            weight,
+            total_value,
+            category,
+            note,
+            created_by,
+            materials (name),
+            partners (name),
+            users (full_name, email)
+          `)
+                .order('transaction_date', { ascending: false })) as any;
 
-        if (error) throw error;
+            if (error) {
+                console.error("API: transactionsAPI.getAll error", error);
+                throw error;
+            }
 
-        return data.map((item: any) => ({
-            id: item.id,
-            date: item.transaction_date,
-            type: item.type as TransactionType,
-            materialId: item.material_id,
-            materialName: item.materials?.name || undefined,
-            partnerName: item.partners?.name || undefined,
-            weight: item.weight ? Number(item.weight) : undefined,
-            totalValue: Number(item.total_value),
-            category: item.category as ExpenseCategory | undefined,
-            note: item.note || undefined,
-            createdBy: item.users?.full_name || item.users?.email || 'Hệ thống'
-        }));
+            console.log("API: transactionsAPI.getAll success", data?.length);
+
+            return (data || []).map((item: any) => ({
+                id: item.id,
+                date: item.transaction_date,
+                type: item.type as TransactionType,
+                materialId: item.material_id,
+                materialName: item.materials?.name || undefined,
+                partnerName: item.partners?.name || undefined,
+                weight: item.weight ? Number(item.weight) : undefined,
+                totalValue: Number(item.total_value),
+                category: item.category as ExpenseCategory | undefined,
+                note: item.note || undefined,
+                createdBy: item.users?.full_name || item.users?.email || 'Hệ thống'
+            }));
+        } catch (err) {
+            console.error("API: transactionsAPI.getAll EXCEPTION", err);
+            throw err;
+        }
     },
 
     /**
