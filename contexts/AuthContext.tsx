@@ -32,24 +32,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         let mounted = true;
 
-        // Failsafe: Force stop loading after 5 seconds to prevent infinite spinner
-        // This handles cases where Supabase might just hang due to network/config issues
+        // Failsafe: Force stop loading after 5 seconds
         const timeoutId = setTimeout(() => {
-            if (mounted) {
+            if (mounted && loading) {
                 console.warn("Auth check timed out - forcing loading false");
                 setLoading(false);
             }
         }, 5000);
 
-        async function loadUser() {
+        async function initAuth() {
             try {
-                const current = await authAPI.getCurrentUser();
-                if (mounted && current) {
-                    setUser(current.user);
-                    setProfile(current.profile);
+                // 1. Get session from storage first
+                const { data: { session }, error } = await supabase.auth.getSession();
+
+                if (error) {
+                    throw error;
+                }
+
+                if (mounted) {
+                    if (session?.user) {
+                        console.log("Session restored:", session.user.email);
+                        setUser(session.user);
+
+                        // Fetch profile
+                        try {
+                            const current = await authAPI.getCurrentUser();
+                            if (mounted && current) {
+                                setProfile(current.profile);
+                            }
+                        } catch (profileError) {
+                            console.error("Error fetching profile during init:", profileError);
+                        }
+                    } else {
+                        console.log("No active session found.");
+                    }
                 }
             } catch (error) {
-                console.error('Error loading user:', error);
+                console.error('Error initializing auth:', error);
             } finally {
                 if (mounted) {
                     setLoading(false);
@@ -57,30 +76,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
             }
         }
-        loadUser();
 
-        // Listen for auth changes
+        initAuth();
+
+        // 2. Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log("Auth state change:", event);
             if (!mounted) return;
 
             if (session?.user) {
                 setUser(session.user);
-                // Reload profile on sign in
-                if (event === 'SIGNED_IN') {
+
+                if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
                     try {
                         const current = await authAPI.getCurrentUser();
                         if (mounted) setProfile(current?.profile);
                     } catch (e) {
-                        console.error("Error fetching profile on signin:", e);
+                        console.error("Error fetching profile on auth change:", e);
                     }
                 }
-            } else {
+            } else if (event === 'SIGNED_OUT') {
                 setUser(null);
                 setProfile(null);
             }
-            // Ensure loading is set to false when auth state settles
+
+            // Ensure loading is done
             setLoading(false);
-            clearTimeout(timeoutId);
         });
 
         return () => {

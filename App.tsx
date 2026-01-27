@@ -13,7 +13,7 @@ import { Material, Transaction, Partner } from './types';
 import { materialsAPI, partnersAPI, transactionsAPI } from './lib/api';
 
 const MainApp: React.FC = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, logout, loading: authLoading } = useAuth();
   const [currentView, setCurrentView] = useState('dashboard');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
@@ -273,12 +273,20 @@ const MainApp: React.FC = () => {
           </div>
           <h2 className="text-xl font-bold text-white mb-2">Lỗi Kết Nối</h2>
           <p className="text-slate-400 mb-4">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-primary-600 hover:bg-primary-500 text-white px-6 py-2 rounded-xl font-medium"
-          >
-            Thử Lại
-          </button>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-primary-600 hover:bg-primary-500 text-white px-6 py-2 rounded-xl font-medium transition-colors"
+            >
+              Thử Lại
+            </button>
+            <button
+              onClick={() => logout()}
+              className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded-xl font-medium transition-colors border border-slate-600"
+            >
+              Đăng Xuất
+            </button>
+          </div>
         </div>
       </div>
     );
