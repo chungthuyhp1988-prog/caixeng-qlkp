@@ -426,12 +426,10 @@ export const authAPI = {
     /**
      * Đăng nhập
      */
-    login: async (email: string) => {
-        // Simple magic link or password login depending on config
-        // For this app we assume Email/Password implementation
+    login: async (email: string, password: string) => {
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
-            password: 'password_placeholder' // UI should pass this value, but for now placeholder or generic
+            password
         });
         if (error) throw error;
         return data;

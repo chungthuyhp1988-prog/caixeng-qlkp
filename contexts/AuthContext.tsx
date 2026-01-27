@@ -8,7 +8,7 @@ interface AuthContextType {
     profile: any | null; // Expand type if needed
     loading: boolean;
     isAdmin: boolean;
-    login: (email: string) => Promise<any>;
+    login: (email: string, password: string) => Promise<any>;
     logout: () => Promise<void>;
     refreshProfile: () => Promise<void>;
 }
@@ -111,8 +111,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
     }, []);
 
-    const login = async (email: string) => {
-        return authAPI.login(email);
+    const login = async (email: string, password: string) => {
+        return authAPI.login(email, password);
     };
 
     const logout = async () => {
