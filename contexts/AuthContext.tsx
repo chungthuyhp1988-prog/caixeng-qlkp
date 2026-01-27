@@ -116,9 +116,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const logout = async () => {
-        await authAPI.logout();
-        setUser(null);
-        setProfile(null);
+        try {
+            await authAPI.logout();
+        } catch (error) {
+            console.error("Logout error:", error);
+        } finally {
+            setUser(null);
+            setProfile(null);
+            localStorage.removeItem('sb-rawkygzlklltfsilhwsz-auth-token'); // Clear Supabase local storage if possible
+        }
     };
 
     const isAdmin = profile?.role === 'ADMIN';
