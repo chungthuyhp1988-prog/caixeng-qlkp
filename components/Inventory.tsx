@@ -32,7 +32,7 @@ const Inventory: React.FC<InventoryProps> = ({ materials, transactions, onProduc
 
   const handleProduceSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const amount = Number(produceAmount);
+    const amount = Number(produceAmount.replace(/\./g, '').replace(',', '.'));
     if (amount > 0 && amount <= scrapStock) {
       onProduce(amount);
       setShowProduceModal(false);
@@ -267,36 +267,49 @@ const Inventory: React.FC<InventoryProps> = ({ materials, transactions, onProduc
                 <label className="block text-slate-300 text-sm font-medium mb-2">Khối lượng phế đưa vào (kg)</label>
                 <div className="relative">
                   <input
-                    type="number"
+                    type="text"
                     required
-                    min="1"
-                    max={scrapStock}
                     value={produceAmount}
-                    onChange={(e) => setProduceAmount(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9,.]/g, '');
+                      const parts = val.split(',');
+                      const integerPart = parts[0].replace(/\./g, '');
+                      const decimalPart = parts.length > 1 ? ',' + parts[1] : '';
+
+                      if (!isNaN(Number(integerPart))) {
+                        const formattedInt = Number(integerPart).toLocaleString('vi-VN');
+                        setProduceAmount(formattedInt + decimalPart);
+                      }
+                    }}
                     className="w-full bg-slate-900 border border-slate-600 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-primary-500 font-bold text-lg"
                     placeholder="0"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded">
-                    Max: {scrapStock}
+                    Max: {scrapStock.toLocaleString('vi-VN')}
                   </div>
                 </div>
               </div>
 
-              {produceAmount && Number(produceAmount) > 0 && (
-                <div className="mb-6 bg-slate-900/50 p-4 rounded-xl border border-slate-700">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-slate-400 text-sm">Hao hụt (5%):</span>
-                    <span className="text-red-400 font-medium text-sm">{(Number(produceAmount) * 0.05).toFixed(1)} kg</span>
+              {produceAmount && (() => {
+                const amount = Number(produceAmount.replace(/\./g, '').replace(',', '.'));
+                return amount > 0;
+              })() && (
+                  <div className="mb-6 bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-slate-400 text-sm">Hao hụt (5%):</span>
+                      <span className="text-red-400 font-medium text-sm">{
+                        (Number(produceAmount.replace(/\./g, '').replace(',', '.')) * 0.05).toFixed(1)
+                      } kg</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-2 border-t border-slate-700/50">
+                      <span className="text-white font-medium">Thu được bột:</span>
+                      <span className="text-primary-400 font-bold text-xl flex items-center gap-2">
+                        <ArrowRight size={18} className="text-slate-600" />
+                        {(Number(produceAmount.replace(/\./g, '').replace(',', '.')) * 0.95).toFixed(1)} kg
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center pt-2 border-t border-slate-700/50">
-                    <span className="text-white font-medium">Thu được bột:</span>
-                    <span className="text-primary-400 font-bold text-xl flex items-center gap-2">
-                      <ArrowRight size={18} className="text-slate-600" />
-                      {(Number(produceAmount) * 0.95).toFixed(1)} kg
-                    </span>
-                  </div>
-                </div>
-              )}
+                )}
 
               <div className="flex gap-3 mt-6">
                 <button
@@ -309,7 +322,10 @@ const Inventory: React.FC<InventoryProps> = ({ materials, transactions, onProduc
                 <button
                   type="submit"
                   className="flex-1 py-3 bg-primary-600 hover:bg-primary-500 text-white rounded-xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={!produceAmount || Number(produceAmount) <= 0 || Number(produceAmount) > scrapStock}
+                  disabled={(() => {
+                    const amount = Number(produceAmount.replace(/\./g, '').replace(',', '.'));
+                    return !produceAmount || amount <= 0 || amount > scrapStock;
+                  })()}
                 >
                   Xác nhận
                 </button>

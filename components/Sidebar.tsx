@@ -1,6 +1,7 @@
-import React from 'react';
-import { LayoutDashboard, Package, ArrowDownToLine, ArrowUpFromLine, Settings, Recycle, Wallet, Users, LogOut, Briefcase } from 'lucide-react';
+import React, { useState } from 'react';
+import { LayoutDashboard, Package, ArrowDownToLine, ArrowUpFromLine, Settings, Recycle, Wallet, Users, LogOut, Briefcase, Key } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import ChangePasswordModal from './ChangePasswordModal';
 
 interface SidebarProps {
   currentView: string;
@@ -10,6 +11,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isMobile }) => {
   const { logout, user, isAdmin, profile } = useAuth();
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const menuItems = [
     { id: 'dashboard', label: 'Tổng Quan', mobileLabel: 'Tổng quan', icon: <LayoutDashboard size={20} /> },
@@ -38,18 +40,30 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isMobile
           <Recycle className="text-white" size={24} />
         </div>
         <div>
-          <h1 className="font-bold text-lg tracking-tight">KHO PHẾ THANH NAM</h1>
+          <h1 className="font-bold text-base tracking-tight">KHO PHẾ THANH NAM</h1>
           <p className="text-xs text-slate-400">Quản lý kho tái chế</p>
         </div>
       </div>
 
       <div className="px-6 py-2">
-        <div className="bg-slate-800 rounded-lg p-3 border border-slate-700">
+        <div className="bg-slate-800 rounded-lg p-3 border border-slate-700 relative group">
           <p className="text-xs text-slate-400 mb-1">Xin chào,</p>
-          <p className="text-sm font-bold truncate">{profile?.full_name || user?.email}</p>
+          <p className="text-sm font-bold truncate">
+            {profile?.full_name && profile.full_name !== user?.email
+              ? profile.full_name
+              : (user?.user_metadata?.full_name || user?.email?.split('@')[0])}
+          </p>
           <div className="mt-1 inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-slate-700 text-slate-300 uppercase">
             {isAdmin ? 'Quản lý' : 'Nhân viên'}
           </div>
+
+          <button
+            onClick={() => setIsPasswordModalOpen(true)}
+            className="absolute top-2 right-2 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+            title="Đổi mật khẩu"
+          >
+            <Key size={14} />
+          </button>
         </div>
       </div>
 
@@ -90,6 +104,11 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isMobile
           <span className="font-medium text-sm">Đăng xuất</span>
         </button>
       </div>
+
+      <ChangePasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+      />
     </div>
   );
 

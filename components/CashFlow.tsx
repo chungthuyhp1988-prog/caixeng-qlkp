@@ -52,9 +52,12 @@ const CashFlow: React.FC<CashFlowProps> = ({ transactions, onAddTransaction, onD
     e.preventDefault();
     if (!amount || !date) return;
 
+    // Clean formatting (remove dots) before converting to number
+    const numericAmount = Number(amount.replace(/\./g, '').replace(/,/g, ''));
+
     if (editingTransaction) {
       onUpdateExpense?.(editingTransaction.id, {
-        totalValue: Number(amount),
+        totalValue: numericAmount,
         category: category,
         note: note,
         transaction_date: new Date(date).toISOString()
@@ -67,7 +70,7 @@ const CashFlow: React.FC<CashFlowProps> = ({ transactions, onAddTransaction, onD
         type: TransactionType.EXPENSE,
         category: category,
         partnerName: 'Chi phí vận hành',
-        totalValue: Number(amount),
+        totalValue: numericAmount,
         note: note
       };
       onAddTransaction(newTransaction);
@@ -87,7 +90,7 @@ const CashFlow: React.FC<CashFlowProps> = ({ transactions, onAddTransaction, onD
 
   const handleEdit = (transaction: Transaction) => {
     setEditingTransaction(transaction);
-    setAmount(transaction.totalValue.toString());
+    setAmount(transaction.totalValue.toLocaleString('vi-VN'));
     setCategory(transaction.category || ExpenseCategory.LABOR);
     setNote(transaction.note || '');
     setDate(new Date(transaction.date).toISOString().slice(0, 10));
@@ -349,11 +352,13 @@ const CashFlow: React.FC<CashFlowProps> = ({ transactions, onAddTransaction, onD
               <div>
                 <label className="block text-slate-400 text-sm font-medium mb-1">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
                 <input
-                  type="number"
+                  type="text"
                   required
-                  min="0"
                   value={amount}
-                  onChange={e => setAmount(e.target.value)}
+                  onChange={e => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    setAmount(val ? Number(val).toLocaleString('vi-VN') : '');
+                  }}
                   className="w-full bg-slate-900 border border-slate-600 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-red-500 font-bold text-lg"
                   placeholder="0"
                 />
