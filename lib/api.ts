@@ -416,9 +416,11 @@ export const authAPI = {
      * Lấy user hiện tại & profile
      */
     getCurrentUser: async () => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return null;
+        // Use getSession() which properly restores session from localStorage
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) return null;
 
+        const user = session.user;
         const { data: profile } = await supabase
             .from('users')
             .select('*')
