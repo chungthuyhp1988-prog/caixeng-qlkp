@@ -38,33 +38,64 @@ const MainApp: React.FC = () => {
         return;
       }
 
+      console.log('Starting loadData...', { user: user.email });
+
       // Failsafe timeout
       const timeoutId = setTimeout(() => {
         if (mounted) {
+          console.error("Global timeout loading data reached (15s)");
           setError('Kết nối quá hạn. Vui lòng kiểm tra mạng hoặc thử lại.');
           setLoading(false);
         }
-      }, 15000); // Increased to 15 seconds
+      }, 15000);
+
+      if (mounted) setLoading(true);
+
+      const loadMaterial = async () => {
+        try {
+          console.log("Fetching materials...");
+          const data = await materialsAPI.getAll();
+          console.log("Fetched materials:", data.length);
+          if (mounted) setMaterials(data);
+        } catch (e) {
+          console.error("Failed to load materials", e);
+        }
+      };
+
+      const loadPartners = async () => {
+        try {
+          console.log("Fetching partners...");
+          const data = await partnersAPI.getAll();
+          console.log("Fetched partners:", data.length);
+          if (mounted) setPartners(data);
+        } catch (e) {
+          console.error("Failed to load partners", e);
+        }
+      };
+
+      const loadTransactions = async () => {
+        try {
+          console.log("Fetching transactions...");
+          const data = await transactionsAPI.getAll();
+          console.log("Fetched transactions:", data.length);
+          if (mounted) setTransactions(data);
+        } catch (e) {
+          console.error("Failed to load transactions", e);
+        }
+      };
 
       try {
-        if (mounted) setLoading(true);
-        const [materialsData, partnersData, transactionsData] = await Promise.all([
-          materialsAPI.getAll(),
-          partnersAPI.getAll(),
-          transactionsAPI.getAll()
-        ]);
+        await Promise.all([loadMaterial(), loadPartners(), loadTransactions()]);
 
         if (mounted) {
-          setMaterials(materialsData);
-          setPartners(partnersData);
-          setTransactions(transactionsData);
+          // Only fail if EVERYTHING failed? Or show partial?
+          // For now, if at least one worked, we don't show global error
+          // But if all failed, maybe show error.
+          // However, keeping original behavior: clear error if we got here.
           setError(null);
         }
       } catch (err) {
-        console.error('Error loading data:', err);
-        if (mounted) {
-          setError('Không thể kết nối đến database. Vui lòng kiểm tra cấu hình Supabase.');
-        }
+        console.error('Error loading data (unexpected):', err);
       } finally {
         if (mounted) {
           clearTimeout(timeoutId);

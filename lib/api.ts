@@ -10,12 +10,18 @@ export const materialsAPI = {
      * Lấy tất cả materials
      */
     getAll: async (): Promise<Material[]> => {
+        console.log("API: materialsAPI.getAll called");
         const { data, error } = await supabase
             .from('materials')
             .select('*')
             .order('type', { ascending: true });
 
-        if (error) throw error;
+        if (error) {
+            console.error("API: materialsAPI.getAll error", error);
+            throw error;
+        }
+
+        console.log("API: materialsAPI.getAll success", data?.length);
 
         // Map database fields to frontend types
         return data.map(item => ({
@@ -51,12 +57,18 @@ export const partnersAPI = {
      * Lấy tất cả partners
      */
     getAll: async (): Promise<Partner[]> => {
+        console.log("API: partnersAPI.getAll called");
         const { data, error } = await supabase
             .from('partners')
             .select('*')
             .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+            console.error("API: partnersAPI.getAll error", error);
+            throw error;
+        }
+
+        console.log("API: partnersAPI.getAll success", data?.length);
 
         return data.map(item => ({
             id: item.id,
