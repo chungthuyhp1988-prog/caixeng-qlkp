@@ -43,11 +43,11 @@ const MainApp: React.FC = () => {
       // Failsafe timeout
       const timeoutId = setTimeout(() => {
         if (mounted) {
-          console.error("Global timeout loading data reached (15s)");
+          console.error("Global timeout loading data reached (25s)");
           setError('Kết nối quá hạn. Vui lòng kiểm tra mạng hoặc thử lại.');
           setLoading(false);
         }
-      }, 15000);
+      }, 25000);
 
       if (mounted) setLoading(true);
 

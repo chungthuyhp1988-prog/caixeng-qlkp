@@ -6,7 +6,7 @@ import { Material, Partner, Transaction, MaterialType, PartnerType, TransactionT
 // =====================================================
 
 // Helper for timeout
-const withTimeout = <T>(promise: PromiseLike<T>, ms: number = 8000): Promise<T> => {
+const withTimeout = <T>(promise: PromiseLike<T>, ms: number = 20000): Promise<T> => {
     return Promise.race([
         Promise.resolve(promise),
         new Promise<T>((_, reject) =>
