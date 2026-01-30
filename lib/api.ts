@@ -139,13 +139,17 @@ export const partnersAPI = {
      * Tìm partner theo tên
      */
     findByName: async (name: string): Promise<Partner | null> => {
+        console.log('API: partnersAPI.findByName called with:', name);
         const { data, error } = await supabase
             .from('partners')
             .select('*')
             .ilike('name', name)
-            .single();
+            .maybeSingle();
 
-        if (error) return null;
+        if (error || !data) {
+            console.log('API: partnersAPI.findByName not found or error:', error?.message);
+            return null;
+        }
 
         return {
             id: data.id,
@@ -261,40 +265,60 @@ export const transactionsAPI = {
         weight: number;
         pricePerKg: number;
     }) => {
-        // Get material ID
-        const { data: material } = await supabase
-            .from('materials')
-            .select('id')
-            .eq('code', params.materialCode)
-            .single();
+        console.log('API: transactionsAPI.createImport called with:', params);
+        try {
+            // Get material ID
+            const { data: material, error: materialError } = await supabase
+                .from('materials')
+                .select('id')
+                .eq('code', params.materialCode)
+                .single();
 
-        if (!material) throw new Error('Material not found');
+            if (materialError || !material) {
+                console.error('API: createImport - Material not found:', materialError?.message);
+                throw new Error('Không tìm thấy loại nguyên liệu');
+            }
+            console.log('API: createImport - Material found:', material.id);
 
-        // Get or create partner
-        let partner = await partnersAPI.findByName(params.partnerName);
-        if (!partner) {
-            partner = await partnersAPI.create({
-                name: params.partnerName,
-                type: PartnerType.SUPPLIER
-            });
-        }
+            // Get or create partner
+            let partner = await partnersAPI.findByName(params.partnerName);
+            if (!partner) {
+                console.log('API: createImport - Creating new partner:', params.partnerName);
+                partner = await partnersAPI.create({
+                    name: params.partnerName,
+                    type: PartnerType.SUPPLIER
+                });
+            }
+            console.log('API: createImport - Partner ID:', partner.id);
 
-        // Create transaction
-        const { data, error } = await supabase
-            .from('transactions')
-            .insert([{
+            // Create transaction
+            const insertData = {
                 type: 'IMPORT',
                 material_id: material.id,
                 partner_id: partner.id,
                 weight: params.weight,
                 total_value: params.weight * params.pricePerKg,
-                category: 'MATERIAL'
-            }])
-            .select()
-            .single();
+                category: 'MATERIAL',
+                transaction_date: new Date().toISOString()
+            };
+            console.log('API: createImport - Insert data:', insertData);
 
-        if (error) throw error;
-        return data;
+            const { data, error } = await supabase
+                .from('transactions')
+                .insert([insertData])
+                .select()
+                .single();
+
+            if (error) {
+                console.error('API: createImport - Insert error:', error);
+                throw error;
+            }
+            console.log('API: createImport - Success:', data.id);
+            return data;
+        } catch (err: any) {
+            console.error('API: createImport - Exception:', err);
+            throw new Error(err.message || 'Không thể thực hiện nhập kho');
+        }
     },
 
     /**
@@ -306,39 +330,59 @@ export const transactionsAPI = {
         weight: number;
         pricePerKg: number;
     }) => {
-        // Get material ID
-        const { data: material } = await supabase
-            .from('materials')
-            .select('id')
-            .eq('code', params.materialCode)
-            .single();
+        console.log('API: transactionsAPI.createExport called with:', params);
+        try {
+            // Get material ID
+            const { data: material, error: materialError } = await supabase
+                .from('materials')
+                .select('id')
+                .eq('code', params.materialCode)
+                .single();
 
-        if (!material) throw new Error('Material not found');
+            if (materialError || !material) {
+                console.error('API: createExport - Material not found:', materialError?.message);
+                throw new Error('Không tìm thấy loại thành phẩm');
+            }
+            console.log('API: createExport - Material found:', material.id);
 
-        // Get or create partner
-        let partner = await partnersAPI.findByName(params.partnerName);
-        if (!partner) {
-            partner = await partnersAPI.create({
-                name: params.partnerName,
-                type: PartnerType.CUSTOMER
-            });
-        }
+            // Get or create partner
+            let partner = await partnersAPI.findByName(params.partnerName);
+            if (!partner) {
+                console.log('API: createExport - Creating new partner:', params.partnerName);
+                partner = await partnersAPI.create({
+                    name: params.partnerName,
+                    type: PartnerType.CUSTOMER
+                });
+            }
+            console.log('API: createExport - Partner ID:', partner.id);
 
-        // Create transaction
-        const { data, error } = await supabase
-            .from('transactions')
-            .insert([{
+            // Create transaction
+            const insertData = {
                 type: 'EXPORT',
                 material_id: material.id,
                 partner_id: partner.id,
                 weight: params.weight,
-                total_value: params.weight * params.pricePerKg
-            }])
-            .select()
-            .single();
+                total_value: params.weight * params.pricePerKg,
+                transaction_date: new Date().toISOString()
+            };
+            console.log('API: createExport - Insert data:', insertData);
 
-        if (error) throw error;
-        return data;
+            const { data, error } = await supabase
+                .from('transactions')
+                .insert([insertData])
+                .select()
+                .single();
+
+            if (error) {
+                console.error('API: createExport - Insert error:', error);
+                throw error;
+            }
+            console.log('API: createExport - Success:', data.id);
+            return data;
+        } catch (err: any) {
+            console.error('API: createExport - Exception:', err);
+            throw new Error(err.message || 'Không thể thực hiện xuất kho');
+        }
     },
 
     /**
