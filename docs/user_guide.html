@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hướng Dẫn Sử Dụng - Kho Phế Thanh Nam</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f7fa;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: white;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #1e3a5f;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            border-bottom: 3px solid #22c55e;
+            padding-bottom: 20px;
+        }
+
+        h1::before {
+            content: "📖 ";
+        }
+
+        h2 {
+            color: #1e3a5f;
+            margin: 40px 0 20px;
+            padding: 10px 0;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        h3 {
+            color: #334155;
+            margin: 20px 0 10px;
+        }
+
+        .toc {
+            background: #f1f5f9;
+            padding: 20px 30px;
+            border-radius: 10px;
+            margin: 30px 0;
+        }
+
+        .toc h2 {
+            margin-top: 0;
+            border: none;
+        }
+
+        .toc ol {
+            padding-left: 20px;
+        }
+
+        .toc li {
+            margin: 8px 0;
+        }
+
+        .toc a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        th,
+        td {
+            border: 1px solid #e2e8f0;
+            padding: 12px 15px;
+            text-align: left;
+        }
+
+        th {
+            background: #1e3a5f;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f8fafc;
+        }
+
+        img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            margin: 20px 0;
+            display: block;
+        }
+
+        .tip {
+            background: #ecfdf5;
+            border-left: 4px solid #22c55e;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .tip::before {
+            content: "💡 Mẹo: ";
+            font-weight: bold;
+            color: #16a34a;
+        }
+
+        .warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .warning::before {
+            content: "⚠️ Lưu ý: ";
+            font-weight: bold;
+            color: #d97706;
+        }
+
+        .contact {
+            background: linear-gradient(135deg, #1e3a5f 0%, #334155 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .contact h2 {
+            color: white;
+            border: none;
+            margin: 0 0 20px;
+        }
+
+        .contact p {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 0.9em;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .feature-card {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .feature-card strong {
+            color: #1e3a5f;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            .container {
+                box-shadow: none;
+                max-width: 100%;
+            }
+
+            img {
+                max-width: 80%;
+                margin: 10px auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>HƯỚNG DẪN SỬ DỤNG<br>PHẦN MỀM QUẢN LÝ KHO PHẾ THANH NAM</h1>
+
+        <div class="toc">
+            <h2>📋 Mục Lục</h2>
+            <ol>
+                <li><a href="#intro">Giới Thiệu Tổng Quan</a></li>
+                <li><a href="#login">Đăng Nhập Hệ Thống</a></li>
+                <li><a href="#dashboard">Màn Hình Tổng Quan (Dashboard)</a></li>
+                <li><a href="#inventory">Quản Lý Kho Hàng</a></li>
+                <li><a href="#partners">Quản Lý Đối Tác</a></li>
+                <li><a href="#import">Nhập Phế Liệu</a></li>
+                <li><a href="#export">Xuất Bột Nhựa</a></li>
+                <li><a href="#cashflow">Sổ Thu Chi</a></li>
+                <li><a href="#personnel">Nhân Sự</a></li>
+                <li><a href="#settings">Cài Đặt & Đăng Xuất</a></li>
+                <li><a href="#troubleshoot">Xử Lý Sự Cố</a></li>
+            </ol>
+        </div>
+
+        <h2 id="intro">1. Giới Thiệu Tổng Quan</h2>
+        <p><strong>Phần mềm Quản Lý Kho Phế Thanh Nam</strong> là hệ thống quản lý toàn diện dành cho ngành thu mua và
+            chế biến phế liệu nhựa.</p>
+
+        <div class="feature-grid">
+            <div class="feature-card">📊 <strong>Tổng quan</strong><br>Theo dõi tồn kho, doanh thu</div>
+            <div class="feature-card">📦 <strong>Kho hàng</strong><br>Quản lý nguyên liệu & thành phẩm</div>
+            <div class="feature-card">🤝 <strong>Đối tác</strong><br>Khách hàng & nhà cung cấp</div>
+            <div class="feature-card">📥 <strong>Nhập phế</strong><br>Ghi nhận phế liệu nhập kho</div>
+            <div class="feature-card">📤 <strong>Xuất bột</strong><br>Ghi nhận sản phẩm xuất kho</div>
+            <div class="feature-card">💰 <strong>Sổ thu chi</strong><br>Theo dõi dòng tiền</div>
+            <div class="feature-card">👥 <strong>Nhân sự</strong><br>Quản lý nhân viên</div>
+        </div>
+
+        <h2 id="login">2. Đăng Nhập Hệ Thống</h2>
+        <img src="login.png" alt="Màn hình đăng nhập">
+
+        <h3>Cách Đăng Nhập</h3>
+        <table>
+            <tr>
+                <th>Bước</th>
+                <th>Hành động</th>
+            </tr>
+            <tr>
+                <td><strong>1</strong></td>
+                <td>Nhập <strong>Số điện thoại</strong> (ví dụ: 0943431591)</td>
+            </tr>
+            <tr>
+                <td><strong>2</strong></td>
+                <td>Nhập <strong>Mật khẩu</strong></td>
+            </tr>
+            <tr>
+                <td><strong>3</strong></td>
+                <td>Nhấn 👁️ để hiện/ẩn mật khẩu (nếu cần)</td>
+            </tr>
+            <tr>
+                <td><strong>4</strong></td>
+                <td>Nhấn <strong>"Đăng Nhập →"</strong></td>
+            </tr>
+        </table>
+
+        <div class="tip">Nếu quên mật khẩu, liên hệ Admin để được cấp lại.</div>
+
+        <h2 id="dashboard">3. Màn Hình Tổng Quan (Dashboard)</h2>
+        <img src="dashboard.png" alt="Tổng Quan Kho">
+
+        <h3>Các Thành Phần Chính</h3>
+        <table>
+            <tr>
+                <th>Thành phần</th>
+                <th>Ý nghĩa</th>
+            </tr>
+            <tr>
+                <td><strong>Tồn Kho Nhựa Phế</strong></td>
+                <td>Tổng trọng lượng phế liệu (31,4 Tấn)</td>
+            </tr>
+            <tr>
+                <td><strong>Tồn Kho Bột Nhựa</strong></td>
+                <td>Tổng trọng lượng thành phẩm (2,5 Tấn)</td>
+            </tr>
+            <tr>
+                <td><strong>Tổng Doanh Thu</strong></td>
+                <td>Doanh thu tích lũy tháng (50.000.000 đ)</td>
+            </tr>
+            <tr>
+                <td><strong>Biểu đồ 7 ngày</strong></td>
+                <td>Nhập (xanh) / Xuất (cam) theo ngày</td>
+            </tr>
+            <tr>
+                <td><strong>Giao dịch gần đây</strong></td>
+                <td>Các giao dịch mới nhất</td>
+            </tr>
+        </table>
+
+        <h2 id="inventory">4. Quản Lý Kho Hàng</h2>
+        <img src="inventory.png" alt="Kho Hàng">
+
+        <h3>Thông Tin Hiển Thị</h3>
+        <table>
+            <tr>
+                <th>Loại</th>
+                <th>Thông tin</th>
+            </tr>
+            <tr>
+                <td><strong>Nhựa Phế Liệu</strong></td>
+                <td>Tồn kho + Giá trị ước tính</td>
+            </tr>
+            <tr>
+                <td><strong>Bột Nhựa Thành Phẩm</strong></td>
+                <td>Tồn kho + Giá trị + Trạng thái</td>
+            </tr>
+        </table>
+
+        <p><strong>Các Tab Lọc:</strong> Tất cả | Nhựa Phế | Bột Nhựa</p>
+        <p><strong>Lịch Sử Giao Dịch:</strong> Lịch sử Nhập / Lịch sử Xuất</p>
+
+        <h2 id="partners">5. Quản Lý Đối Tác</h2>
+        <img src="partners.png" alt="Quản Lý Đối Tác">
+
+        <p>Mỗi thẻ hiển thị: Tên đối tác, Loại (NHÀ CUNG CẤP / KHÁCH HÀNG), SĐT, Địa chỉ, Tổng giao dịch.</p>
+
+        <h3>Thêm Đối Tác Mới</h3>
+        <img src="add_partner.png" alt="Modal Thêm Đối Tác">
+
+        <table>
+            <tr>
+                <th>Bước</th>
+                <th>Hành động</th>
+            </tr>
+            <tr>
+                <td><strong>1</strong></td>
+                <td>Nhấn <strong>"+ Thêm Đối Tác"</strong></td>
+            </tr>
+            <tr>
+                <td><strong>2</strong></td>
+                <td>Chọn loại: <strong>Nhà cung cấp</strong> hoặc <strong>Khách hàng</strong></td>
+            </tr>
+            <tr>
+                <td><strong>3</strong></td>
+                <td>Điền thông tin: Tên, SĐT, Địa chỉ</td>
+            </tr>
+            <tr>
+                <td><strong>4</strong></td>
+                <td>Nhấn <strong>"Lưu"</strong></td>
+            </tr>
+        </table>
+
+        <h2 id="import">6. Nhập Phế Liệu</h2>
+        <p>Nhấn <strong>"Nhập Phế"</strong> ở sidebar để mở form nhập.</p>
+
+        <table>
+            <tr>
+                <th>Trường</th>
+                <th>Mô tả</th>
+            </tr>
+            <tr>
+                <td>Nhà cung cấp</td>
+                <td>Chọn từ danh sách đối tác</td>
+            </tr>
+            <tr>
+                <td>Loại nguyên liệu</td>
+                <td>Loại nhựa phế</td>
+            </tr>
+            <tr>
+                <td>Trọng lượng (kg)</td>
+                <td>Số kg nhập</td>
+            </tr>
+            <tr>
+                <td>Đơn giá (VNĐ/kg)</td>
+                <td>Giá mua mỗi kg</td>
+            </tr>
+            <tr>
+                <td>Ghi chú</td>
+                <td>Thông tin bổ sung</td>
+            </tr>
+        </table>
+
+        <h2 id="export">7. Xuất Bột Nhựa</h2>
+        <img src="export.png" alt="Xuất Bột Nhựa">
+
+        <table>
+            <tr>
+                <th>Trường</th>
+                <th>Mô tả</th>
+                <th>Ví dụ</th>
+            </tr>
+            <tr>
+                <td><strong>Loại thành phẩm</strong></td>
+                <td>Tự động chọn "Bột Nhựa Thành Phẩm"</td>
+                <td>Tồn kho: 2.500 kg</td>
+            </tr>
+            <tr>
+                <td><strong>Khách hàng / Nhà máy</strong></td>
+                <td>Chọn hoặc nhập tên</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td><strong>Mã lô sản xuất</strong></td>
+                <td>Mã batch tự động</td>
+                <td>BATCH-20260130</td>
+            </tr>
+            <tr>
+                <td><strong>Khối lượng xuất (kg)</strong></td>
+                <td>Số kg muốn xuất</td>
+                <td>Tối đa: 2.500 kg</td>
+            </tr>
+            <tr>
+                <td><strong>Đơn giá bán (VNĐ/kg)</strong></td>
+                <td>Giá bán mỗi kg</td>
+                <td>22.000</td>
+            </tr>
+            <tr>
+                <td><strong>Thành tiền</strong></td>
+                <td>Tự động tính</td>
+                <td>= Khối lượng × Đơn giá</td>
+            </tr>
+        </table>
+
+        <p>Nhấn <strong>"Xuất Kho Ngay"</strong> để lưu phiếu xuất và cập nhật tồn kho.</p>
+
+        <h2 id="cashflow">8. Sổ Thu Chi</h2>
+        <img src="cashflow.png" alt="Sổ Thu Chi">
+
+        <h3>Tổng Quan Tài Chính</h3>
+        <table>
+            <tr>
+                <th>Chỉ số</th>
+                <th>Ý nghĩa</th>
+                <th>Ví dụ</th>
+            </tr>
+            <tr>
+                <td><strong>Tổng Thu</strong> (xanh)</td>
+                <td>Tổng tiền thu về</td>
+                <td>50.000.000 đ</td>
+            </tr>
+            <tr>
+                <td><strong>Tổng Chi</strong> (đỏ)</td>
+                <td>Tổng tiền chi ra</td>
+                <td>108.000.000 đ</td>
+            </tr>
+            <tr>
+                <td><strong>Lợi Nhuận</strong></td>
+                <td>Thu - Chi</td>
+                <td>-58.000.000 đ</td>
+            </tr>
+        </table>
+
+        <p><strong>Tab Giao Dịch:</strong> Doanh Thu (Thu) | Chi Phí (Chi)</p>
+
+        <h3>Thêm Khoản Chi</h3>
+        <ol>
+            <li>Nhấn nút <strong>"+ Tạo khoản chi"</strong></li>
+            <li>Chọn loại: Nhân công / Máy móc / Khác</li>
+            <li>Nhập số tiền, ngày, ghi chú</li>
+            <li>Nhấn <strong>"Lưu Khoản Chi"</strong></li>
+        </ol>
+
+        <h2 id="personnel">9. Nhân Sự</h2>
+        <div class="warning">Chỉ <strong>ADMIN</strong> mới có quyền truy cập mục này.</div>
+
+        <h3>Phân Quyền</h3>
+        <table>
+            <tr>
+                <th>Vai trò</th>
+                <th>Quyền hạn</th>
+            </tr>
+            <tr>
+                <td><strong>ADMIN</strong></td>
+                <td>Toàn quyền: Xem, Thêm, Sửa, Xóa</td>
+            </tr>
+            <tr>
+                <td><strong>STAFF</strong></td>
+                <td>Quyền cơ bản: Xem, Nhập/Xuất</td>
+            </tr>
+        </table>
+
+        <h2 id="settings">10. Cài Đặt & Đăng Xuất</h2>
+
+        <h3>Đổi Mật Khẩu</h3>
+        <ol>
+            <li>Nhấn biểu tượng 🔑 ở thanh thông tin user</li>
+            <li>Nhập mật khẩu mới (ít nhất 6 ký tự)</li>
+            <li>Xác nhận lại mật khẩu</li>
+            <li>Nhấn <strong>"Xác nhận đổi"</strong></li>
+        </ol>
+
+        <h3>Đăng Xuất</h3>
+        <ol>
+            <li>Nhấn <strong>"Đăng xuất"</strong> ở cuối sidebar</li>
+            <li>Xác nhận trong hộp thoại</li>
+            <li>Trang sẽ reload về màn hình đăng nhập</li>
+        </ol>
+
+        <h2 id="troubleshoot">11. Xử Lý Sự Cố</h2>
+        <table>
+            <tr>
+                <th>Vấn đề</th>
+                <th>Giải pháp</th>
+            </tr>
+            <tr>
+                <td>Không đăng nhập được</td>
+                <td>Kiểm tra SĐT và mật khẩu, liên hệ Admin</td>
+            </tr>
+            <tr>
+                <td>Màn hình "Lỗi Kết Nối"</td>
+                <td>Kiểm tra Internet, nhấn "Thử Lại"</td>
+            </tr>
+            <tr>
+                <td>Dữ liệu không cập nhật</td>
+                <td>Nhấn F5 hoặc đăng xuất/đăng nhập lại</td>
+            </tr>
+            <tr>
+                <td>Đổi mật khẩu bị treo</td>
+                <td>Đợi 15 giây, nếu không được thử lại sau</td>
+            </tr>
+        </table>
+
+        <div class="contact">
+            <h2>📞 Liên Hệ Hỗ Trợ</h2>
+            <p><strong>Admin:</strong> Nguyễn Quốc Anh</p>
+            <p><strong>SĐT:</strong> 0943 431 591</p>
+        </div>
+
+        <div class="footer">
+            <p><strong>Phiên bản:</strong> 1.1 | <strong>Cập nhật:</strong> 30/01/2026</p>
+            <p>© 2026 Kho Phế Thanh Nam - Phần mềm Quản Lý Kho</p>
+        </div>
+    </div>
+</body>
+
+</html>
