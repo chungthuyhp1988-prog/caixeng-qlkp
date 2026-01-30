@@ -29,7 +29,16 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isMobile
 
   const handleLogout = async () => {
     if (window.confirm('Bạn có chắc chắn muốn đăng xuất?')) {
-      await logout();
+      try {
+        console.log('Logging out...');
+        await logout();
+        console.log('Logout successful');
+        // Force reload to clear all state
+        window.location.reload();
+      } catch (error) {
+        console.error('Logout error:', error);
+        alert('Có lỗi khi đăng xuất. Vui lòng thử lại.');
+      }
     }
   };
 

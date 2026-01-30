@@ -34,9 +34,13 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
         setLoading(true);
 
         try {
-            const { error } = await supabase.auth.updateUser({
-                password: password
-            });
+            // Timeout after 15 seconds
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Yêu cầu quá thời gian. Vui lòng thử lại.')), 15000)
+            );
+
+            const updatePromise = supabase.auth.updateUser({ password });
+            const { error } = await Promise.race([updatePromise, timeoutPromise]) as any;
 
             if (error) throw error;
 
@@ -51,7 +55,11 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
 
         } catch (err: any) {
             console.error('Error changing password:', err);
-            setError(err.message || 'Không thể đổi mật khẩu. Vui lòng thử lại.');
+            if (err.message?.includes('session')) {
+                setError('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+            } else {
+                setError(err.message || 'Không thể đổi mật khẩu. Vui lòng thử lại.');
+            }
         } finally {
             setLoading(false);
         }
@@ -71,7 +79,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
                     <Key size={24} className="text-primary-400" />
                 </div>
 
-                <h3 className="text-xl font-bold text-white text-center mb-6">Đổi Mật Khâu</h3>
+                <h3 className="text-xl font-bold text-white text-center mb-6">Đổi Mật Khẩu</h3>
 
                 {success ? (
                     <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-6 text-center animate-in zoom-in duration-300">
