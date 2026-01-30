@@ -51,7 +51,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isMobile
           <p className="text-sm font-bold truncate">
             {profile?.full_name && profile.full_name !== user?.email
               ? profile.full_name
-              : (user?.user_metadata?.full_name || user?.email?.split('@')[0])}
+              : user?.user_metadata?.full_name}
           </p>
           <div className="mt-1 inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-slate-700 text-slate-300 uppercase">
             {isAdmin ? 'Quản lý' : 'Nhân viên'}

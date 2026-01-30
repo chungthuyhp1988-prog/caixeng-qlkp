@@ -22,6 +22,12 @@ const Login = () => {
 
             if (isPhoneNumber) {
                 emailToUse = `${identifier}@qlkp.com`;
+            } else if (!identifier.includes('@')) {
+                // If it's not a valid email and not a phone number, maybe alert? 
+                // But let's assume if it has no @, we accept it might be a username or partial email?
+                // Actually, for this specific request, let's enforce @qlkp.com if it LOOKS like a phone number.
+                // Or just if they typed a phone.
+                emailToUse = `${identifier}@qlkp.com`;
             }
 
             await authAPI.loginWithPassword(emailToUse, password);
@@ -57,7 +63,7 @@ const Login = () => {
                     )}
 
                     <div>
-                        <label className="block text-slate-300 text-sm font-medium mb-2 pl-1">Email hoặc Số điện thoại</label>
+                        <label className="block text-slate-300 text-sm font-medium mb-2 pl-1">Số điện thoại</label>
                         <div className="relative group">
                             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary-400 transition-colors">
                                 {/^\d+$/.test(identifier) ? <Phone size={20} /> : <Mail size={20} />}
@@ -68,7 +74,7 @@ const Login = () => {
                                 value={identifier}
                                 onChange={(e) => setIdentifier(e.target.value)}
                                 className="w-full bg-slate-900 border border-slate-600 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-primary-500 transition-all shadow-sm"
-                                placeholder="0912345678 hoặc email@qlkp.com"
+                                placeholder="Nhập số điện thoại (ví dụ: 0969509456)"
                             />
                         </div>
                     </div>

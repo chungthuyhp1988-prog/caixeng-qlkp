@@ -161,7 +161,7 @@ const Personnel = () => {
                                 </div>
                                 <div>
                                     <h3 className="text-white font-bold text-sm">{user.fullName || 'Chưa cập nhật tên'}</h3>
-                                    <p className="text-xs text-slate-400">{user.email}</p>
+                                    <p className="text-xs text-slate-400 hidden">{user.email}</p>
                                 </div>
                             </div>
                             <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${user.role === 'ADMIN' ? 'bg-purple-500/10 text-purple-400' : 'bg-blue-500/10 text-blue-400'}`}>
@@ -215,14 +215,10 @@ const Personnel = () => {
                             )}
 
                             <div>
-                                <label className="block text-slate-400 text-sm font-medium mb-1">Email</label>
+                                {/* Email hidden */}
                                 <input
-                                    type="email"
-                                    required={!editingStaff}
-                                    disabled={!!editingStaff}
+                                    type="hidden"
                                     value={email}
-                                    onChange={e => setEmail(e.target.value)}
-                                    className="w-full bg-slate-900 border border-slate-600 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-primary-500 disabled:opacity-50"
                                 />
                             </div>
 
@@ -242,7 +238,14 @@ const Personnel = () => {
                                     <input
                                         type="tel"
                                         value={phone}
-                                        onChange={e => setPhone(e.target.value)}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            setPhone(val);
+                                            // Auto-generate email
+                                            if (!editingStaff) {
+                                                setEmail(`${val}@qlkp.com`);
+                                            }
+                                        }}
                                         className="w-full bg-slate-900 border border-slate-600 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-primary-500"
                                     />
                                 </div>
