@@ -16,18 +16,18 @@ const Login = () => {
         setError(null);
 
         try {
-            // Logic: Nếu là số điện thoại (10 số), tự động thêm @qlkp.com
-            let emailToUse = identifier;
-            const isPhoneNumber = /^\d{10}$/.test(identifier);
+            // Clean input (remove spaces)
+            const cleanIdentifier = identifier.replace(/\s+/g, '');
+            let emailToUse = cleanIdentifier;
+
+            // Check if it looks like a phone number (digits only, 9-12 chars)
+            const isPhoneNumber = /^\d{9,12}$/.test(cleanIdentifier);
 
             if (isPhoneNumber) {
-                emailToUse = `${identifier}@qlkp.com`;
-            } else if (!identifier.includes('@')) {
-                // If it's not a valid email and not a phone number, maybe alert? 
-                // But let's assume if it has no @, we accept it might be a username or partial email?
-                // Actually, for this specific request, let's enforce @qlkp.com if it LOOKS like a phone number.
-                // Or just if they typed a phone.
-                emailToUse = `${identifier}@qlkp.com`;
+                emailToUse = `${cleanIdentifier}@qlkp.com`;
+            } else if (!cleanIdentifier.includes('@')) {
+                // Fallback for username-like input
+                emailToUse = `${cleanIdentifier}@qlkp.com`;
             }
 
             await authAPI.loginWithPassword(emailToUse, password);
