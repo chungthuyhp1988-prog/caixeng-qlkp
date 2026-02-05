@@ -6,6 +6,7 @@ export enum MaterialType {
 export enum TransactionType {
   IMPORT = 'IMPORT', // Nhập kho (Chi)
   EXPORT = 'EXPORT', // Xuất kho (Thu)
+  PRODUCTION = 'PRODUCTION', // Sản xuất
   EXPENSE = 'EXPENSE' // Chi phí khác (Lương, Máy móc...)
 }
 

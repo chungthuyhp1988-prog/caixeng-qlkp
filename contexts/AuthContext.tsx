@@ -28,87 +28,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [profile, setProfile] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Initial load
+    // Initial load - MOCK MODE BYPASS
     useEffect(() => {
-        let mounted = true;
-
-        // Failsafe: Force stop loading after 15 seconds
-        const timeoutId = setTimeout(() => {
-            if (mounted && loading) {
-                console.warn("Auth check timed out - forcing loading false");
-                setLoading(false);
-            }
-        }, 15000);
-
-        async function initAuth() {
-            try {
-                // 1. Get session from storage first
-                const { data: { session }, error } = await supabase.auth.getSession();
-
-                if (error) {
-                    throw error;
-                }
-
-                if (mounted) {
-                    if (session?.user) {
-                        console.log("Session restored:", session.user.email);
-                        setUser(session.user);
-
-                        // Fetch profile
-                        try {
-                            const current = await authAPI.getCurrentUser();
-                            if (mounted && current) {
-                                setProfile(current.profile);
-                            }
-                        } catch (profileError) {
-                            console.error("Error fetching profile during init:", profileError);
-                        }
-                    } else {
-                        console.log("No active session found.");
-                    }
-                }
-            } catch (error) {
-                console.error('Error initializing auth:', error);
-            } finally {
-                if (mounted) {
-                    setLoading(false);
-                    clearTimeout(timeoutId);
-                }
-            }
-        }
-
-        initAuth();
-
-        // 2. Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log("Auth state change:", event);
-            if (!mounted) return;
-
-            if (session?.user) {
-                setUser(session.user);
-
-                if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-                    try {
-                        const current = await authAPI.getCurrentUser();
-                        if (mounted) setProfile(current?.profile);
-                    } catch (e) {
-                        console.error("Error fetching profile on auth change:", e);
-                    }
-                }
-            } else if (event === 'SIGNED_OUT') {
-                setUser(null);
-                setProfile(null);
-            }
-
-            // Ensure loading is done
+        // Simulate Auth Check delay
+        setTimeout(() => {
+            console.log("MOCK AUTH: Auto-login as Admin");
+            setUser({ id: 'mock-user-id', email: 'admin@khophe.com' } as any);
+            setProfile({ role: 'ADMIN', full_name: 'Admin Mock' });
             setLoading(false);
-        });
-
-        return () => {
-            mounted = false;
-            clearTimeout(timeoutId);
-            subscription.unsubscribe();
-        };
+        }, 500);
     }, []);
 
     const login = async (email: string, password: string) => {
