@@ -5,14 +5,80 @@ import { Material, Partner, Transaction, MaterialType, PartnerType, TransactionT
 // MATERIALS API
 // =====================================================
 
+// =====================================================
+// HELPER FUNCTIONS
+// =====================================================
+
+const IS_DEV = import.meta.env.DEV;
+
+// Helper for conditional logging (only in dev)
+const log = {
+    info: (...args: any[]) => IS_DEV && console.log(...args),
+    error: (...args: any[]) => console.error(...args),
+    warn: (...args: any[]) => console.warn(...args),
+};
+
 // Helper for timeout
 const withTimeout = <T>(promise: PromiseLike<T>, ms: number = 20000): Promise<T> => {
     return Promise.race([
         Promise.resolve(promise),
         new Promise<T>((_, reject) =>
-            setTimeout(() => reject(new Error(`Request timed out after ${ms}ms`)), ms)
+            setTimeout(() => reject(new Error(`Kết nối quá hạn (${ms / 1000}s). Vui lòng kiểm tra mạng.`)), ms)
         )
     ]);
+};
+
+// Helper for retry with exponential backoff
+const withRetry = async <T>(
+    fn: () => Promise<T>,
+    options: { maxRetries?: number; baseDelay?: number; timeout?: number } = {}
+): Promise<T> => {
+    const { maxRetries = 3, baseDelay = 1000, timeout = 20000 } = options;
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            return await withTimeout(fn(), timeout);
+        } catch (err: any) {
+            lastError = err;
+
+            // Don't retry on auth errors or validation errors
+            if (err.code === 'PGRST301' || err.code === '42501' || err.status === 401) {
+                throw err;
+            }
+
+            // Don't retry on last attempt
+            if (attempt === maxRetries - 1) break;
+
+            // Exponential backoff: 1s, 2s, 4s...
+            const delay = baseDelay * Math.pow(2, attempt);
+            log.warn(`Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+
+    throw lastError || new Error('Không thể kết nối. Vui lòng thử lại.');
+};
+
+// Parse Supabase errors to user-friendly messages
+const parseError = (error: any): string => {
+    if (!error) return 'Đã xảy ra lỗi không xác định';
+
+    // Common Supabase error codes
+    if (error.code === '23505') return 'Dữ liệu đã tồn tại';
+    if (error.code === '23503') return 'Dữ liệu liên quan không tồn tại';
+    if (error.code === '42501') return 'Bạn không có quyền thực hiện thao tác này';
+    if (error.code === 'PGRST301') return 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.';
+
+    // Network errors
+    if (error.message?.includes('timeout') || error.message?.includes('quá hạn')) {
+        return 'Kết nối quá hạn. Vui lòng kiểm tra mạng và thử lại.';
+    }
+    if (error.message?.includes('fetch') || error.message?.includes('network')) {
+        return 'Lỗi kết nối mạng. Vui lòng thử lại.';
+    }
+
+    return error.message || 'Đã xảy ra lỗi. Vui lòng thử lại.';
 };
 
 export const materialsAPI = {
@@ -20,20 +86,19 @@ export const materialsAPI = {
      * Lấy tất cả materials
      */
     getAll: async (): Promise<Material[]> => {
-        console.log("API: materialsAPI.getAll called");
-        try {
-            const { data, error } = await withTimeout(supabase
+        log.info("API: materialsAPI.getAll called");
+        return withRetry(async () => {
+            const { data, error } = await supabase
                 .from('materials')
                 .select('*')
-                .order('type', { ascending: true })) as any; // Cast to any to avoid strict type checks on PostgrestResponse vs Promise
+                .order('type', { ascending: true });
 
             if (error) {
-                console.error("API: materialsAPI.getAll error", error);
+                log.error("API: materialsAPI.getAll error", error);
                 throw error;
             }
 
-            console.log("API: materialsAPI.getAll success", data?.length);
-            // Map database fields to frontend types
+            log.info("API: materialsAPI.getAll success", data?.length);
             return (data || []).map((item: any) => ({
                 id: item.id,
                 code: item.code,
@@ -43,10 +108,7 @@ export const materialsAPI = {
                 unit: item.unit,
                 pricePerKg: Number(item.price_per_kg)
             }));
-        } catch (err) {
-            console.error("API: materialsAPI.getAll EXCEPTION", err);
-            throw err;
-        }
+        });
     },
 
     /**
@@ -71,19 +133,19 @@ export const partnersAPI = {
      * Lấy tất cả partners
      */
     getAll: async (): Promise<Partner[]> => {
-        console.log("API: partnersAPI.getAll called");
-        try {
-            const { data, error } = await withTimeout(supabase
+        log.info("API: partnersAPI.getAll called");
+        return withRetry(async () => {
+            const { data, error } = await supabase
                 .from('partners')
                 .select('*')
-                .order('created_at', { ascending: false })) as any;
+                .order('created_at', { ascending: false });
 
             if (error) {
-                console.error("API: partnersAPI.getAll error", error);
+                log.error("API: partnersAPI.getAll error", error);
                 throw error;
             }
 
-            console.log("API: partnersAPI.getAll success", data?.length);
+            log.info("API: partnersAPI.getAll success", data?.length);
 
             return (data || []).map((item: any) => ({
                 id: item.id,
@@ -94,10 +156,7 @@ export const partnersAPI = {
                 totalVolume: Number(item.total_volume),
                 totalValue: Number(item.total_value)
             }));
-        } catch (err) {
-            console.error("API: partnersAPI.getAll EXCEPTION", err);
-            throw err;
-        }
+        });
     },
 
     /**
@@ -209,33 +268,33 @@ export const transactionsAPI = {
      * Lấy tất cả transactions với join materials, partners & users (người tạo)
      */
     getAll: async (): Promise<Transaction[]> => {
-        console.log("API: transactionsAPI.getAll called");
-        try {
-            const { data, error } = await withTimeout(supabase
+        log.info("API: transactionsAPI.getAll called");
+        return withRetry(async () => {
+            const { data, error } = await supabase
                 .from('transactions')
                 .select(`
-            id,
-            transaction_date,
-            type,
-            material_id,
-            partner_id,
-            weight,
-            total_value,
-            category,
-            note,
-            created_by,
-            materials (name),
-            partners (name),
-            users (full_name, email)
-          `)
-                .order('transaction_date', { ascending: false })) as any;
+                    id,
+                    transaction_date,
+                    type,
+                    material_id,
+                    partner_id,
+                    weight,
+                    total_value,
+                    category,
+                    note,
+                    created_by,
+                    materials (name),
+                    partners (name),
+                    users (full_name, email)
+                `)
+                .order('transaction_date', { ascending: false });
 
             if (error) {
-                console.error("API: transactionsAPI.getAll error", error);
+                log.error("API: transactionsAPI.getAll error", error);
                 throw error;
             }
 
-            console.log("API: transactionsAPI.getAll success", data?.length);
+            log.info("API: transactionsAPI.getAll success", data?.length);
 
             return (data || []).map((item: any) => ({
                 id: item.id,
@@ -250,10 +309,7 @@ export const transactionsAPI = {
                 note: item.note || undefined,
                 createdBy: item.users?.full_name || item.users?.email || 'Hệ thống'
             }));
-        } catch (err) {
-            console.error("API: transactionsAPI.getAll EXCEPTION", err);
-            throw err;
-        }
+        });
     },
 
     /**

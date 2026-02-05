@@ -27,6 +27,7 @@ const MainApp: React.FC = () => {
   // Load data from Supabase on mount
   useEffect(() => {
     let mounted = true;
+    const IS_DEV = import.meta.env.DEV;
 
     async function loadData() {
       // Wait for auth check to complete first
@@ -38,49 +39,55 @@ const MainApp: React.FC = () => {
         return;
       }
 
-      console.log('Starting loadData...', { user: user.email });
+      IS_DEV && console.log('Starting loadData...', { user: user.email });
 
-      // Failsafe timeout
+      // Failsafe timeout - increased to 30s for slow networks
       const timeoutId = setTimeout(() => {
         if (mounted) {
-          console.error("Global timeout loading data reached (25s)");
+          console.error("Global timeout loading data reached (30s)");
           setError('Kết nối quá hạn. Vui lòng kiểm tra mạng hoặc thử lại.');
           setLoading(false);
         }
-      }, 25000);
+      }, 30000);
 
       if (mounted) setLoading(true);
 
+      // Track individual failures for better error reporting
+      const failures: string[] = [];
+
       const loadMaterial = async () => {
         try {
-          console.log("Fetching materials...");
+          IS_DEV && console.log("Fetching materials...");
           const data = await materialsAPI.getAll();
-          console.log("Fetched materials:", data.length);
+          IS_DEV && console.log("Fetched materials:", data.length);
           if (mounted) setMaterials(data);
         } catch (e) {
           console.error("Failed to load materials", e);
+          failures.push('nguyên liệu');
         }
       };
 
       const loadPartners = async () => {
         try {
-          console.log("Fetching partners...");
+          IS_DEV && console.log("Fetching partners...");
           const data = await partnersAPI.getAll();
-          console.log("Fetched partners:", data.length);
+          IS_DEV && console.log("Fetched partners:", data.length);
           if (mounted) setPartners(data);
         } catch (e) {
           console.error("Failed to load partners", e);
+          failures.push('đối tác');
         }
       };
 
       const loadTransactions = async () => {
         try {
-          console.log("Fetching transactions...");
+          IS_DEV && console.log("Fetching transactions...");
           const data = await transactionsAPI.getAll();
-          console.log("Fetched transactions:", data.length);
+          IS_DEV && console.log("Fetched transactions:", data.length);
           if (mounted) setTransactions(data);
         } catch (e) {
           console.error("Failed to load transactions", e);
+          failures.push('giao dịch');
         }
       };
 
@@ -88,11 +95,14 @@ const MainApp: React.FC = () => {
         await Promise.all([loadMaterial(), loadPartners(), loadTransactions()]);
 
         if (mounted) {
-          // Only fail if EVERYTHING failed? Or show partial?
-          // For now, if at least one worked, we don't show global error
-          // But if all failed, maybe show error.
-          // However, keeping original behavior: clear error if we got here.
-          setError(null);
+          // Show partial error if some failed, but still show the app
+          if (failures.length > 0 && failures.length < 3) {
+            setError(`Không thể tải: ${failures.join(', ')}. Vui lòng làm mới trang.`);
+          } else if (failures.length === 3) {
+            setError('Không thể kết nối server. Vui lòng kiểm tra mạng và thử lại.');
+          } else {
+            setError(null);
+          }
         }
       } catch (err) {
         console.error('Error loading data (unexpected):', err);
@@ -108,7 +118,7 @@ const MainApp: React.FC = () => {
     return () => {
       mounted = false;
     };
-  }, [user, authLoading]); // Added authLoading dependency
+  }, [user, authLoading]);
 
 
   useEffect(() => {
