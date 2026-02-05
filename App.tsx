@@ -41,78 +41,98 @@ const MainApp: React.FC = () => {
 
       IS_DEV && console.log('Starting loadData...', { user: user.email });
 
-      // Failsafe timeout - increased to 30s for slow networks
+      // Failsafe timeout - increased to 45s
       const timeoutId = setTimeout(() => {
-        if (mounted) {
-          console.error("Global timeout loading data reached (30s)");
-          setError('Kết nối quá hạn. Vui lòng kiểm tra mạng hoặc thử lại.');
+        if (mounted && loading) {
+          console.error("Global timeout loading data reached (45s)");
+          setError('Kết nối quá hạn (45s). Vui lòng kiểm tra mạng.');
           setLoading(false);
         }
-      }, 30000);
+      }, 45000);
 
       if (mounted) setLoading(true);
 
-      // Track individual failures for better error reporting
+      // Track failures
       const failures: string[] = [];
+      let successCount = 0;
 
-      const loadMaterial = async () => {
+      // 1. Test Connection First
+      try {
+        /* 
+           Bỏ qua testConnection riêng lẻ để tiết kiệm 1 request round-trip,
+           nhưng nếu materials load fail ngay lập tức thì ta biết connection toi.
+        */
+      } catch (e) {
+        // Ignore
+      }
+
+      // 2. Load Materials
+      if (mounted) {
         try {
           IS_DEV && console.log("Fetching materials...");
           const data = await materialsAPI.getAll();
           IS_DEV && console.log("Fetched materials:", data.length);
-          if (mounted) setMaterials(data);
+          if (mounted) {
+            setMaterials(data);
+            successCount++;
+          }
         } catch (e) {
           console.error("Failed to load materials", e);
           failures.push('nguyên liệu');
         }
-      };
+      }
 
-      const loadPartners = async () => {
+      // 3. Load Partners
+      if (mounted) {
         try {
           IS_DEV && console.log("Fetching partners...");
           const data = await partnersAPI.getAll();
           IS_DEV && console.log("Fetched partners:", data.length);
-          if (mounted) setPartners(data);
+          if (mounted) {
+            setPartners(data);
+            successCount++;
+          }
         } catch (e) {
           console.error("Failed to load partners", e);
           failures.push('đối tác');
         }
-      };
+      }
 
-      const loadTransactions = async () => {
+      // 4. Load Transactions
+      if (mounted) {
         try {
           IS_DEV && console.log("Fetching transactions...");
           const data = await transactionsAPI.getAll();
           IS_DEV && console.log("Fetched transactions:", data.length);
-          if (mounted) setTransactions(data);
+          if (mounted) {
+            setTransactions(data);
+            successCount++;
+          }
         } catch (e) {
           console.error("Failed to load transactions", e);
           failures.push('giao dịch');
         }
-      };
+      }
 
-      try {
-        await Promise.all([loadMaterial(), loadPartners(), loadTransactions()]);
+      if (mounted) {
+        clearTimeout(timeoutId);
+        setLoading(false);
 
-        if (mounted) {
-          // Show partial error if some failed, but still show the app
-          if (failures.length > 0 && failures.length < 3) {
-            setError(`Không thể tải: ${failures.join(', ')}. Vui lòng làm mới trang.`);
-          } else if (failures.length === 3) {
-            setError('Không thể kết nối server. Vui lòng kiểm tra mạng và thử lại.');
+        // Show error logic
+        if (failures.length > 0) {
+          if (successCount === 0) {
+            // All failed
+            setError('Không thể kết nối đến máy chủ. Vui lòng kiểm tra cấu hình mạng hoặc biến môi trường.');
           } else {
-            setError(null);
+            // Partial failure
+            setError(`Cảnh báo: Không thể tải ${failures.join(', ')}.`);
           }
-        }
-      } catch (err) {
-        console.error('Error loading data (unexpected):', err);
-      } finally {
-        if (mounted) {
-          clearTimeout(timeoutId);
-          setLoading(false);
+        } else {
+          setError(null);
         }
       }
     }
+
     loadData();
 
     return () => {
