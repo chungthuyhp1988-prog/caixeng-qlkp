@@ -13,7 +13,7 @@ const IS_DEV = import.meta.env.DEV;
 
 // Helper for conditional logging (only in dev)
 const log = {
-    info: (...args: any[]) => IS_DEV && console.log(...args),
+    info: (...args: any[]) => console.log(...args), // Force log in Prod for debugging
     error: (...args: any[]) => console.error(...args),
     warn: (...args: any[]) => console.warn(...args),
 };

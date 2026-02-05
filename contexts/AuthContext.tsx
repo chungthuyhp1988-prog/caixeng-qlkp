@@ -32,13 +32,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         let mounted = true;
 
-        // Failsafe: Force stop loading after 5 seconds
+        // Failsafe: Force stop loading after 15 seconds
         const timeoutId = setTimeout(() => {
             if (mounted && loading) {
                 console.warn("Auth check timed out - forcing loading false");
                 setLoading(false);
             }
-        }, 5000);
+        }, 15000);
 
         async function initAuth() {
             try {

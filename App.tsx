@@ -316,11 +316,21 @@ const MainApp: React.FC = () => {
   // App Data Loading
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-950">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-400">Đang tải dữ liệu...</p>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950">
+        <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-slate-400 font-medium">Đang tải dữ liệu...</p>
+        <p className="text-slate-600 text-xs mt-2">v2.0 - Stability Overhaul</p>
+        {loading && error && (
+          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg max-w-md text-center">
+            <p className="text-red-400 text-sm mb-2">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              Tải lại trang
+            </button>
+          </div>
+        )}
       </div>
     );
   }
