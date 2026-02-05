@@ -321,9 +321,13 @@ export const transactionsAPI = {
         weight: number;
         pricePerKg: number;
     }) => {
-        console.log('API: transactionsAPI.createImport called with:', params);
-        try {
-            // Get material ID
+        log.info('API: transactionsAPI.createImport called with:', params);
+        return withRetry(async () => {
+            // 1. Get User ID
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Chưa đăng nhập");
+
+            // 2. Get material ID
             const { data: material, error: materialError } = await supabase
                 .from('materials')
                 .select('id')
@@ -331,50 +335,39 @@ export const transactionsAPI = {
                 .single();
 
             if (materialError || !material) {
-                console.error('API: createImport - Material not found:', materialError?.message);
+                log.error('API: createImport - Material not found:', materialError?.message);
                 throw new Error('Không tìm thấy loại nguyên liệu');
             }
-            console.log('API: createImport - Material found:', material.id);
 
-            // Get or create partner
+            // 3. Get or create partner
             let partner = await partnersAPI.findByName(params.partnerName);
             if (!partner) {
-                console.log('API: createImport - Creating new partner:', params.partnerName);
+                log.info('API: createImport - Creating new partner:', params.partnerName);
                 partner = await partnersAPI.create({
                     name: params.partnerName,
                     type: PartnerType.SUPPLIER
                 });
             }
-            console.log('API: createImport - Partner ID:', partner.id);
 
-            // Create transaction
-            const insertData = {
-                type: 'IMPORT',
-                material_id: material.id,
-                partner_id: partner.id,
-                weight: params.weight,
-                total_value: params.weight * params.pricePerKg,
-                category: 'MATERIAL',
-                transaction_date: new Date().toISOString()
-            };
-            console.log('API: createImport - Insert data:', insertData);
-
-            const { data, error } = await supabase
-                .from('transactions')
-                .insert([insertData])
-                .select()
-                .single();
+            // 4. Call RPC
+            const { data, error } = await supabase.rpc('create_transaction_import', {
+                p_material_id: material.id,
+                p_partner_id: partner.id,
+                p_weight: params.weight,
+                p_price_per_kg: params.pricePerKg,
+                p_total_value: params.weight * params.pricePerKg,
+                p_date: new Date().toISOString(),
+                p_note: 'Nhập kho từ đối tác', // Or pass param
+                p_created_by: user.id
+            });
 
             if (error) {
-                console.error('API: createImport - Insert error:', error);
+                log.error('API: createImport - RPC error:', error);
                 throw error;
             }
-            console.log('API: createImport - Success:', data.id);
+            log.info('API: createImport - Success:', data);
             return data;
-        } catch (err: any) {
-            console.error('API: createImport - Exception:', err);
-            throw new Error(err.message || 'Không thể thực hiện nhập kho');
-        }
+        });
     },
 
     /**
@@ -386,9 +379,13 @@ export const transactionsAPI = {
         weight: number;
         pricePerKg: number;
     }) => {
-        console.log('API: transactionsAPI.createExport called with:', params);
-        try {
-            // Get material ID
+        log.info('API: transactionsAPI.createExport called with:', params);
+        return withRetry(async () => {
+            // 1. Get User ID
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Chưa đăng nhập");
+
+            // 2. Get material ID
             const { data: material, error: materialError } = await supabase
                 .from('materials')
                 .select('id')
@@ -396,49 +393,38 @@ export const transactionsAPI = {
                 .single();
 
             if (materialError || !material) {
-                console.error('API: createExport - Material not found:', materialError?.message);
+                log.error('API: createExport - Material not found:', materialError?.message);
                 throw new Error('Không tìm thấy loại thành phẩm');
             }
-            console.log('API: createExport - Material found:', material.id);
 
-            // Get or create partner
+            // 3. Get or create partner
             let partner = await partnersAPI.findByName(params.partnerName);
             if (!partner) {
-                console.log('API: createExport - Creating new partner:', params.partnerName);
+                log.info('API: createExport - Creating new partner:', params.partnerName);
                 partner = await partnersAPI.create({
                     name: params.partnerName,
                     type: PartnerType.CUSTOMER
                 });
             }
-            console.log('API: createExport - Partner ID:', partner.id);
 
-            // Create transaction
-            const insertData = {
-                type: 'EXPORT',
-                material_id: material.id,
-                partner_id: partner.id,
-                weight: params.weight,
-                total_value: params.weight * params.pricePerKg,
-                transaction_date: new Date().toISOString()
-            };
-            console.log('API: createExport - Insert data:', insertData);
-
-            const { data, error } = await supabase
-                .from('transactions')
-                .insert([insertData])
-                .select()
-                .single();
+            // 4. Call RPC
+            const { data, error } = await supabase.rpc('create_transaction_export', {
+                p_material_id: material.id,
+                p_partner_id: partner.id,
+                p_weight: params.weight,
+                p_total_value: params.weight * params.pricePerKg,
+                p_date: new Date().toISOString(),
+                p_note: 'Xuất kho cho đối tác',
+                p_created_by: user.id
+            });
 
             if (error) {
-                console.error('API: createExport - Insert error:', error);
+                log.error('API: createExport - RPC error:', error);
                 throw error;
             }
-            console.log('API: createExport - Success:', data.id);
+            log.info('API: createExport - Success:', data);
             return data;
-        } catch (err: any) {
-            console.error('API: createExport - Exception:', err);
-            throw new Error(err.message || 'Không thể thực hiện xuất kho');
-        }
+        });
     },
 
     /**
@@ -470,19 +456,27 @@ export const transactionsAPI = {
      * Tạo transaction PRODUCTION
      */
     createProduction: async (scrapWeight: number) => {
-        const { data, error } = await supabase
-            .from('transactions')
-            .insert([{
-                type: 'PRODUCTION',
-                weight: scrapWeight,
-                total_value: 0, // Cost is already accounted in Import
-                note: `Sản xuất ${scrapWeight}kg phế → ${scrapWeight * 0.95}kg bột`
-            }])
-            .select()
-            .single();
+        log.info('API: transactionsAPI.createProduction called with:', scrapWeight);
+        return withRetry(async () => {
+            // 1. Get User ID
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Chưa đăng nhập");
 
-        if (error) throw error;
-        return data;
+            // 2. Call RPC
+            const { data, error } = await supabase.rpc('create_transaction_production', {
+                p_weight_scrap: scrapWeight,
+                p_date: new Date().toISOString(),
+                p_note: `Sản xuất ${scrapWeight}kg phế → ${(scrapWeight * 0.95).toFixed(1)}kg bột`,
+                p_created_by: user.id
+            });
+
+            if (error) {
+                log.error('API: createProduction - RPC error:', error);
+                throw error;
+            }
+            log.info('API: createProduction - Success:', data);
+            return data;
+        });
     },
 
     /**
