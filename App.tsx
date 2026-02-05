@@ -366,11 +366,26 @@ const MainApp: React.FC = () => {
               onClick={() => window.location.reload()}
               className="bg-primary-600 hover:bg-primary-500 text-white px-6 py-2 rounded-xl font-medium transition-colors"
             >
-              Thử Lại
+              Tải lại trang
+            </button>
+            <button
+              onClick={async () => {
+                import('./lib/supabase').then(async ({ supabase }) => {
+                  const start = Date.now();
+                  console.log("TESTING CONNECTION...");
+                  const { count, error } = await supabase.from('materials').select('*', { count: 'exact', head: true });
+                  const duration = Date.now() - start;
+                  if (error) alert(`CONNECTION FAILED (${duration}ms): ${error.message}`);
+                  else alert(`CONNECTION OK (${duration}ms). Count: ${count}`);
+                });
+              }}
+              className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded-xl font-medium transition-colors border border-slate-600"
+            >
+              Test Mạng
             </button>
             <button
               onClick={() => logout()}
-              className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded-xl font-medium transition-colors border border-slate-600"
+              className="text-slate-400 hover:text-white px-4 py-2 text-sm transition-colors"
             >
               Đăng Xuất
             </button>
