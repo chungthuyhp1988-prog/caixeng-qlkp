@@ -33,12 +33,13 @@ const withRetry = async <T>(
     fn: () => Promise<T>,
     options: { maxRetries?: number; baseDelay?: number; timeout?: number } = {}
 ): Promise<T> => {
-    const { maxRetries = 3, baseDelay = 1000, timeout = 20000 } = options;
+    const { maxRetries = 3, baseDelay = 1000 } = options;
     let lastError: Error | null = null;
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
-            return await withTimeout(fn(), timeout);
+            // REMOVED withTimeout wrapper - letting Supabase/Network handle timeout naturally
+            return await fn();
         } catch (err: any) {
             lastError = err;
 
@@ -52,7 +53,7 @@ const withRetry = async <T>(
 
             // Exponential backoff: 1s, 2s, 4s...
             const delay = baseDelay * Math.pow(2, attempt);
-            log.warn(`Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms. Error:`, err);
+            console.warn(`Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms. Error:`, err); // Use console.warn directly
             await new Promise(resolve => setTimeout(resolve, delay));
         }
     }

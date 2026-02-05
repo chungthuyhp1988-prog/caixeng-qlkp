@@ -323,12 +323,29 @@ const MainApp: React.FC = () => {
         {loading && error && (
           <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg max-w-md text-center">
             <p className="text-red-400 text-sm mb-2">{error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
-            >
-              Tải lại trang
-            </button>
+            <div className="flex gap-2 justify-center">
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                Tải lại trang
+              </button>
+              <button
+                onClick={async () => {
+                  import('./lib/supabase').then(async ({ supabase }) => {
+                    const start = Date.now();
+                    console.log("TESTING CONNECTION...");
+                    const { count, error } = await supabase.from('materials').select('*', { count: 'exact', head: true });
+                    const duration = Date.now() - start;
+                    if (error) alert(`CONNECTION FAILED (${duration}ms): ${error.message}`);
+                    else alert(`CONNECTION OK (${duration}ms). Count: ${count}`);
+                  });
+                }}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                Test Mạng
+              </button>
+            </div>
           </div>
         )}
       </div>
