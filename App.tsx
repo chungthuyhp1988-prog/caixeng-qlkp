@@ -41,14 +41,14 @@ const MainApp: React.FC = () => {
 
       IS_DEV && console.log('Starting loadData...', { user: user.email });
 
-      // Failsafe timeout - increased to 45s
+      // Failsafe timeout - reduced to 12s to show diagnostics faster
       const timeoutId = setTimeout(() => {
         if (mounted && loading) {
-          console.error("Global timeout loading data reached (45s)");
-          setError('Kết nối quá hạn (45s). Vui lòng kiểm tra mạng.');
+          console.error("Global timeout loading data reached (12s)");
+          setError('Kết nối quá hạn (12s). Vui lòng kiểm tra mạng.');
           setLoading(false);
         }
-      }, 45000);
+      }, 12000);
 
       if (mounted) setLoading(true);
 
