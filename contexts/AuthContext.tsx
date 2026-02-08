@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User } from '@supabase/supabase-js';
 import { authAPI } from '../lib/api';
 import { supabase } from '../lib/supabase';
@@ -34,65 +34,89 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [user, setUser] = useState<User | null>(null);
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
+    const initDone = useRef(false);
 
     // Load user profile from public.users
-    const loadProfile = async (authUser: User) => {
+    const loadProfile = async (authUser: User): Promise<UserProfile> => {
+        const fallback: UserProfile = {
+            id: authUser.id,
+            email: authUser.email || '',
+            full_name: authUser.user_metadata?.full_name || authUser.email || '',
+            role: 'STAFF',
+        };
+
         try {
-            const { data } = await supabase
+            const { data, error } = await supabase
                 .from('users')
                 .select('*')
                 .eq('id', authUser.id)
                 .single();
 
+            if (error) {
+                console.warn('[Auth] Profile query error:', error.message);
+                return fallback;
+            }
+
             if (data) {
-                setProfile({
+                return {
                     id: data.id,
                     email: data.email,
-                    full_name: data.full_name || authUser.user_metadata?.full_name || authUser.email || '',
+                    full_name: data.full_name || fallback.full_name,
                     role: data.role || 'STAFF',
-                });
-            } else {
-                // Fallback to user metadata
-                setProfile({
-                    id: authUser.id,
-                    email: authUser.email || '',
-                    full_name: authUser.user_metadata?.full_name || authUser.email || '',
-                    role: 'STAFF',
-                });
+                };
             }
+            return fallback;
         } catch (err) {
-            console.error('Error loading profile:', err);
+            console.error('[Auth] Profile load failed:', err);
+            return fallback;
         }
     };
 
-    // Initial auth check + listen for changes
+    // Initial auth check
     useEffect(() => {
-        // 1. Check existing session
+        let isMounted = true;
+
         const initAuth = async () => {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
-                if (session?.user) {
+
+                if (session?.user && isMounted) {
                     setUser(session.user);
-                    await loadProfile(session.user);
+                    const p = await loadProfile(session.user);
+                    if (isMounted) setProfile(p);
                 }
             } catch (err) {
-                console.error('Auth init error:', err);
+                console.error('[Auth] Init error:', err);
             } finally {
-                setLoading(false);
+                if (isMounted) {
+                    initDone.current = true;
+                    setLoading(false);
+                }
             }
         };
 
         initAuth();
 
-        // 2. Listen for auth state changes (login, logout, token refresh)
+        // Listen for auth state changes AFTER init
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
+                if (!isMounted) return;
+
+                // Skip INITIAL_SESSION — already handled by initAuth
+                if (event === 'INITIAL_SESSION') return;
+
                 if (event === 'SIGNED_IN' && session?.user) {
                     setUser(session.user);
-                    await loadProfile(session.user);
+                    // Only load profile if initAuth is done (prevents race condition)
+                    if (initDone.current) {
+                        const p = await loadProfile(session.user);
+                        if (isMounted) setProfile(p);
+                    }
+                    if (isMounted) setLoading(false);
                 } else if (event === 'SIGNED_OUT') {
                     setUser(null);
                     setProfile(null);
+                    if (isMounted) setLoading(false);
                 } else if (event === 'TOKEN_REFRESHED' && session?.user) {
                     setUser(session.user);
                 }
@@ -100,6 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         );
 
         return () => {
+            isMounted = false;
             subscription.unsubscribe();
         };
     }, []);
@@ -124,7 +149,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const refreshProfile = async () => {
         if (user) {
-            await loadProfile(user);
+            const p = await loadProfile(user);
+            setProfile(p);
         }
     };
 

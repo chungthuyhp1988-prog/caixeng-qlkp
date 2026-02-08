@@ -29,7 +29,7 @@ const MainApp: React.FC = () => {
   // Load data from Supabase on mount
   useEffect(() => {
     let mounted = true;
-    const IS_DEV = false; // Disable verbose logging for clean UX
+    const IS_DEV = true; // Enable verbose logging for debugging
 
     async function loadData() {
       // Wait for auth check to complete first
