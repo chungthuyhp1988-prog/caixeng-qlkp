@@ -493,25 +493,31 @@ export const staffAPI = {
         return (data || []).map(mapStaff);
     },
 
-    create: async (staff: Omit<Staff, 'id'>): Promise<Staff> => {
-        // Create auth user first via admin API or direct insert
-        // For now, create in public.users only (auth user would need admin API)
-        // In production, this should use Supabase Admin API
-        const { data, error } = await supabase
-            .from('users')
-            .insert({
-                email: staff.email,
-                full_name: staff.fullName,
-                role: staff.role,
-                phone: staff.phone,
-                salary_base: staff.salaryBase,
-                status: staff.status,
-                joined_at: staff.joinedAt,
-            })
-            .select()
-            .single();
+    create: async (staff: Omit<Staff, 'id'> & { password?: string }): Promise<Staff> => {
+        // Use RPC to create auth user + public profile atomically
+        const phone = staff.phone || staff.email.replace('@qlkp.com', '');
+        const password = staff.password || '123456'; // Default password
+
+        const { data, error } = await supabase.rpc('admin_create_user', {
+            p_phone: phone,
+            p_password: password,
+            p_full_name: staff.fullName,
+            p_role: staff.role,
+            p_salary_base: staff.salaryBase,
+        });
         if (error) throw new Error(`Lỗi tạo nhân sự: ${error.message}`);
-        return mapStaff(data);
+
+        // Return the created staff
+        return {
+            id: data.id,
+            email: data.email,
+            fullName: staff.fullName,
+            role: staff.role,
+            phone: phone,
+            salaryBase: staff.salaryBase,
+            status: 'ACTIVE',
+            joinedAt: new Date().toISOString(),
+        };
     },
 
     update: async (id: string, updates: Partial<Staff>): Promise<Staff> => {

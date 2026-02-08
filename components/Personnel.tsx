@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { staffAPI, Staff } from '../lib/api';
 import { formatCurrency } from '../constants';
-import { Users, UserPlus, Phone, Briefcase, DollarSign, Calendar, Search, Loader2, Save, X, Trash2, Pencil, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Users, UserPlus, Phone, Briefcase, DollarSign, Calendar, Search, Loader2, Save, X, Trash2, Pencil, ToggleLeft, ToggleRight, Lock, Eye, EyeOff } from 'lucide-react';
 import { useToast } from './Toast';
 
 import { useAuth } from '../contexts/AuthContext';
@@ -22,6 +22,8 @@ const Personnel = () => {
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [salaryBase, setSalaryBase] = useState('');
     const [role, setRole] = useState<'ADMIN' | 'STAFF'>('STAFF');
 
@@ -56,6 +58,8 @@ const Personnel = () => {
         setFullName('');
         setEmail('');
         setPhone('');
+        setPassword('');
+        setShowPassword(false);
         setSalaryBase('');
         setRole('STAFF');
         setEditingStaff(null);
@@ -88,21 +92,26 @@ const Personnel = () => {
 
                 toast.success('Cập nhật thành công!');
             } else {
-                // Create new staff
-                if (!email) {
-                    toast.warning('Vui lòng nhập email.');
+                // Create new staff with login credentials
+                if (!phone) {
+                    toast.warning('Vui lòng nhập số điện thoại (dùng làm tài khoản đăng nhập).');
+                    return;
+                }
+                if (!password || password.length < 6) {
+                    toast.warning('Mật khẩu phải có ít nhất 6 ký tự.');
                     return;
                 }
                 await staffAPI.create({
                     fullName,
-                    email,
+                    email: `${phone}@qlkp.com`,
                     phone,
+                    password,
                     salaryBase: numericSalary,
                     role,
                     status: 'ACTIVE',
                     joinedAt: new Date().toISOString()
                 });
-                toast.success('Đã thêm nhân viên mới!');
+                toast.success(`Đã tạo tài khoản cho ${fullName}! SĐT đăng nhập: ${phone}`);
             }
             closeModal();
             fetchStaff();
@@ -341,24 +350,43 @@ const Personnel = () => {
                             </div>
 
                             {!editingStaff && (
-                                <div>
-                                    <label className="block text-slate-400 text-sm font-medium mb-1">Email <span className="text-red-500">*</span></label>
-                                    <input
-                                        type="email"
-                                        required
-                                        value={email}
-                                        onChange={e => setEmail(e.target.value)}
-                                        className="w-full bg-slate-900 border border-slate-600 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-primary-500"
-                                        placeholder="email@khophe.com"
-                                    />
-                                </div>
+                                <>
+                                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 text-blue-300 text-xs">
+                                        💡 Số điện thoại sẽ là tài khoản đăng nhập của nhân viên
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-400 text-sm font-medium mb-1">Mật khẩu <span className="text-red-500">*</span></label>
+                                        <div className="relative">
+                                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
+                                                <Lock size={16} />
+                                            </div>
+                                            <input
+                                                type={showPassword ? 'text' : 'password'}
+                                                required
+                                                minLength={6}
+                                                value={password}
+                                                onChange={e => setPassword(e.target.value)}
+                                                className="w-full bg-slate-900 border border-slate-600 rounded-xl py-2.5 pl-10 pr-10 text-white focus:outline-none focus:border-primary-500"
+                                                placeholder="Ít nhất 6 ký tự"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+                                            >
+                                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </>
                             )}
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-slate-400 text-sm font-medium mb-1">Số điện thoại</label>
+                                    <label className="block text-slate-400 text-sm font-medium mb-1">Số điện thoại {!editingStaff && <span className="text-red-500">*</span>}</label>
                                     <input
                                         type="tel"
+                                        required={!editingStaff}
                                         value={phone}
                                         onChange={e => setPhone(e.target.value)}
                                         className="w-full bg-slate-900 border border-slate-600 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-primary-500"
