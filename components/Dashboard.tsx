@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { ArrowUpRight, ArrowDownRight, TrendingUp, Package, Truck, AlertCircle, Factory, Wallet } from 'lucide-react';
 import { formatCurrency } from '../constants';
 import { Transaction, TransactionType, Material, MaterialType } from '../types';
@@ -30,9 +30,7 @@ const StatCard = ({ title, value, subtext, icon, trend, alert }: any) => (
 
 const RecentTransactionItem: React.FC<{ transaction: Transaction }> = ({ transaction }) => {
   const isRevenue = transaction.type === TransactionType.EXPORT;
-  // Import and Expense are money out
-  const isExpense = transaction.type === TransactionType.IMPORT || transaction.type === TransactionType.EXPENSE;
-  
+
   let Icon = Wallet;
   if (transaction.type === TransactionType.IMPORT) Icon = Truck;
   else if (transaction.type === TransactionType.EXPORT) Icon = Factory;
@@ -64,54 +62,75 @@ const RecentTransactionItem: React.FC<{ transaction: Transaction }> = ({ transac
   );
 };
 
+// Custom tooltip for the bar chart
+const CustomBarTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 shadow-2xl">
+      <p className="text-white font-semibold text-sm mb-2">{label}</p>
+      {payload.map((entry: any, idx: number) => (
+        <div key={idx} className="flex items-center gap-2 mb-1">
+          <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: entry.color }} />
+          <span className="text-slate-400 text-xs">{entry.name}:</span>
+          <span className="text-white text-xs font-bold">
+            {entry.value >= 1000
+              ? `${(entry.value / 1000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tấn`
+              : `${entry.value.toLocaleString('vi-VN')} kg`}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const MONTH_NAMES = ['Th1', 'Th2', 'Th3', 'Th4', 'Th5', 'Th6', 'Th7', 'Th8', 'Th9', 'Th10', 'Th11', 'Th12'];
+
 const Dashboard: React.FC<DashboardProps> = ({ materials, transactions }) => {
   // 1. Calculate Stocks
   const scrapStock = materials.find(m => m.type === MaterialType.SCRAP)?.stock || 0;
   const powderStock = materials.find(m => m.type === MaterialType.POWDER)?.stock || 0;
-  
+
   // 2. Calculate Financials
   const totalRevenue = transactions
     .filter(t => t.type === TransactionType.EXPORT)
     .reduce((sum, t) => sum + t.totalValue, 0);
 
-  // 3. Process Chart Data (Last 7 Days)
+  // 3. Process Chart Data — Last 6 Months (grouped by month)
   const chartData = useMemo(() => {
     const data = [];
     const today = new Date();
-    
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }); // dd/mm
-      
-      // Filter transactions for this specific day
-      const dayTransactions = transactions.filter(t => {
+
+    for (let i = 5; i >= 0; i--) {
+      const month = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const m = month.getMonth();
+      const y = month.getFullYear();
+
+      const monthTransactions = transactions.filter(t => {
         const tDate = new Date(t.date);
-        return tDate.getDate() === date.getDate() && 
-               tDate.getMonth() === date.getMonth() && 
-               tDate.getFullYear() === date.getFullYear();
+        return tDate.getMonth() === m && tDate.getFullYear() === y;
       });
 
-      const inputWeight = dayTransactions
+      const inputWeight = monthTransactions
         .filter(t => t.type === TransactionType.IMPORT)
         .reduce((sum, t) => sum + (t.weight || 0), 0);
-        
-      const outputWeight = dayTransactions
+
+      const outputWeight = monthTransactions
         .filter(t => t.type === TransactionType.EXPORT)
         .reduce((sum, t) => sum + (t.weight || 0), 0);
 
       data.push({
-        name: dateStr,
+        name: `${MONTH_NAMES[m]}/${y}`,
+        shortName: MONTH_NAMES[m],
         input: inputWeight,
-        output: outputWeight
+        output: outputWeight,
       });
     }
     return data;
   }, [transactions]);
 
   // Alert Thresholds
-  const lowScrapAlert = scrapStock < 1000; // Warning if under 1 ton
-  const highStockAlert = powderStock > 20000; // Warning if too much inventory
+  const lowScrapAlert = scrapStock < 1000;
+  const highStockAlert = powderStock > 20000;
 
   return (
     <div className="space-y-6 pb-20 md:pb-0">
@@ -121,32 +140,32 @@ const Dashboard: React.FC<DashboardProps> = ({ materials, transactions }) => {
           <p className="text-slate-400 text-sm">Cập nhật tình hình sản xuất hôm nay</p>
         </div>
         <div className="flex gap-2">
-            <button className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-sm font-medium transition-colors border border-slate-700">
-              Làm mới
-            </button>
-            <button className="bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-lg shadow-primary-600/20">
-              Xuất Báo Cáo
-            </button>
+          <button className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-sm font-medium transition-colors border border-slate-700">
+            Làm mới
+          </button>
+          <button className="bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-lg shadow-primary-600/20">
+            Xuất Báo Cáo
+          </button>
         </div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard 
-          title="Tồn Kho Nhựa Phế" 
+        <StatCard
+          title="Tồn Kho Nhựa Phế"
           value={`${(scrapStock / 1000).toLocaleString('vi-VN', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} Tấn`}
           subtext={lowScrapAlert ? "Cần nhập thêm hàng gấp!" : "Nguyên liệu ổn định"}
           icon={lowScrapAlert ? <AlertCircle size={24} /> : <Truck size={24} />}
           alert={lowScrapAlert}
         />
-        <StatCard 
-          title="Tồn Kho Bột Nhựa" 
+        <StatCard
+          title="Tồn Kho Bột Nhựa"
           value={`${(powderStock / 1000).toLocaleString('vi-VN', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} Tấn`}
           subtext={highStockAlert ? "Kho sắp đầy, cần đẩy hàng đi" : "Sẵn sàng xuất kho"}
           icon={<Package size={24} />}
         />
-        <StatCard 
-          title="Tổng Doanh Thu" 
+        <StatCard
+          title="Tổng Doanh Thu"
           value={formatCurrency(totalRevenue)}
           subtext="Doanh thu tích lũy tháng này"
           icon={<TrendingUp size={24} />}
@@ -158,42 +177,41 @@ const Dashboard: React.FC<DashboardProps> = ({ materials, transactions }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-slate-800 p-6 rounded-2xl border border-slate-700 flex flex-col">
           <div className="flex justify-between items-center mb-6">
-             <h3 className="text-lg font-semibold text-white">Biểu Đồ Nhập/Xuất (7 ngày qua)</h3>
-             <div className="flex gap-4 text-xs font-medium">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-blue-500"></span>
-                  <span className="text-slate-400">Nhập (kg)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-green-500"></span>
-                  <span className="text-slate-400">Xuất (kg)</span>
-                </div>
-             </div>
+            <h3 className="text-lg font-semibold text-white">Nhập / Xuất theo tháng</h3>
+            <div className="flex gap-4 text-xs font-medium">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-sm bg-blue-500"></span>
+                <span className="text-slate-400">Nhập (kg)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-sm bg-emerald-500"></span>
+                <span className="text-slate-400">Xuất (kg)</span>
+              </div>
+            </div>
           </div>
           <div className="h-80 w-full flex-1">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorInput" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorOutput" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
+              <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} barGap={4} barCategoryGap="20%">
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} dy={10} />
-                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value/1000}T`} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '12px', color: '#fff', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)' }}
-                  itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 500 }}
-                  formatter={(value: number) => [`${value.toLocaleString()} kg`, '']}
+                <XAxis
+                  dataKey="shortName"
+                  stroke="#94a3b8"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  dy={10}
                 />
-                <Area type="monotone" dataKey="input" name="Nhập (Phế)" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorInput)" />
-                <Area type="monotone" dataKey="output" name="Xuất (Bột)" stroke="#22c55e" strokeWidth={3} fillOpacity={1} fill="url(#colorOutput)" />
-              </AreaChart>
+                <YAxis
+                  stroke="#94a3b8"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}T` : `${value}`}
+                />
+                <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'rgba(148, 163, 184, 0.08)' }} />
+                <Bar dataKey="input" name="Nhập (Phế)" fill="#3b82f6" radius={[6, 6, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="output" name="Xuất (Bột)" fill="#10b981" radius={[6, 6, 0, 0]} maxBarSize={40} />
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
@@ -210,8 +228,8 @@ const Dashboard: React.FC<DashboardProps> = ({ materials, transactions }) => {
               ))
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-slate-500 opacity-50">
-                 <Package size={48} className="mb-2" strokeWidth={1} />
-                 <p className="text-sm">Chưa có giao dịch nào</p>
+                <Package size={48} className="mb-2" strokeWidth={1} />
+                <p className="text-sm">Chưa có giao dịch nào</p>
               </div>
             )}
           </div>
