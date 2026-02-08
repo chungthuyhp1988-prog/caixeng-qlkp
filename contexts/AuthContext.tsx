@@ -3,9 +3,16 @@ import { User } from '@supabase/supabase-js';
 import { authAPI } from '../lib/api';
 import { supabase } from '../lib/supabase';
 
+interface UserProfile {
+    id: string;
+    email: string;
+    full_name: string;
+    role: string;
+}
+
 interface AuthContextType {
     user: User | null;
-    profile: any | null; // Expand type if needed
+    profile: UserProfile | null;
     loading: boolean;
     isAdmin: boolean;
     login: (email: string, password: string) => Promise<any>;
@@ -25,22 +32,81 @@ const AuthContext = createContext<AuthContextType>({
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
-    const [profile, setProfile] = useState<any | null>(null);
+    const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Initial load - MOCK MODE BYPASS
+    // Load user profile from public.users
+    const loadProfile = async (authUser: User) => {
+        try {
+            const { data } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', authUser.id)
+                .single();
+
+            if (data) {
+                setProfile({
+                    id: data.id,
+                    email: data.email,
+                    full_name: data.full_name || authUser.user_metadata?.full_name || authUser.email || '',
+                    role: data.role || 'STAFF',
+                });
+            } else {
+                // Fallback to user metadata
+                setProfile({
+                    id: authUser.id,
+                    email: authUser.email || '',
+                    full_name: authUser.user_metadata?.full_name || authUser.email || '',
+                    role: 'STAFF',
+                });
+            }
+        } catch (err) {
+            console.error('Error loading profile:', err);
+        }
+    };
+
+    // Initial auth check + listen for changes
     useEffect(() => {
-        // Simulate Auth Check delay
-        setTimeout(() => {
-            console.log("MOCK AUTH: Auto-login as Admin");
-            setUser({ id: 'mock-user-id', email: 'admin@khophe.com' } as any);
-            setProfile({ role: 'ADMIN', full_name: 'Admin Mock' });
-            setLoading(false);
-        }, 500);
+        // 1. Check existing session
+        const initAuth = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user) {
+                    setUser(session.user);
+                    await loadProfile(session.user);
+                }
+            } catch (err) {
+                console.error('Auth init error:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        initAuth();
+
+        // 2. Listen for auth state changes (login, logout, token refresh)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+            async (event, session) => {
+                if (event === 'SIGNED_IN' && session?.user) {
+                    setUser(session.user);
+                    await loadProfile(session.user);
+                } else if (event === 'SIGNED_OUT') {
+                    setUser(null);
+                    setProfile(null);
+                } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+                    setUser(session.user);
+                }
+            }
+        );
+
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
 
     const login = async (email: string, password: string) => {
-        return authAPI.login(email, password);
+        const result = await authAPI.loginWithPassword(email, password);
+        return result;
     };
 
     const logout = async () => {
@@ -51,18 +117,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } finally {
             setUser(null);
             setProfile(null);
-            localStorage.removeItem('sb-rawkygzlklltfsilhwsz-auth-token'); // Clear Supabase local storage if possible
         }
     };
 
     const isAdmin = profile?.role === 'ADMIN';
 
     const refreshProfile = async () => {
-        try {
-            const current = await authAPI.getCurrentUser();
-            setProfile(current?.profile);
-        } catch (e) {
-            console.error("Error refreshing profile:", e);
+        if (user) {
+            await loadProfile(user);
         }
     };
 

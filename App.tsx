@@ -9,11 +9,13 @@ import Partners from './components/Partners';
 import Personnel from './components/Personnel';
 import Login from './components/Login';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ToastProvider, useToast } from './components/Toast';
 import { Material, Transaction, Partner } from './types';
 import { materialsAPI, partnersAPI, transactionsAPI } from './lib/api';
 
 const MainApp: React.FC = () => {
-  const { user, logout, loading: authLoading } = useAuth();
+  const { user, logout, loading: authLoading, profile } = useAuth();
+  const { toast, confirm } = useToast();
   const [currentView, setCurrentView] = useState('dashboard');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
@@ -27,7 +29,7 @@ const MainApp: React.FC = () => {
   // Load data from Supabase on mount
   useEffect(() => {
     let mounted = true;
-    const IS_DEV = import.meta.env.DEV;
+    const IS_DEV = false; // Disable verbose logging for clean UX
 
     async function loadData() {
       // Wait for auth check to complete first
@@ -147,14 +149,45 @@ const MainApp: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Handlers
+  // ━━ Material Handlers ━━
+  const handleAddMaterial = async (material: Omit<Material, 'id'>) => {
+    try {
+      const created = await materialsAPI.create(material);
+      setMaterials(prev => [...prev, created]);
+    } catch (err) {
+      console.error('Error adding material:', err);
+      toast.error('Không thể thêm vật liệu. Vui lòng thử lại.');
+    }
+  };
+
+  const handleUpdateMaterial = async (id: string, updates: Partial<Material>) => {
+    try {
+      await materialsAPI.update(id, updates);
+      setMaterials(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
+    } catch (err) {
+      console.error('Error updating material:', err);
+      toast.error('Không thể cập nhật vật liệu. Vui lòng thử lại.');
+    }
+  };
+
+  const handleDeleteMaterial = async (id: string) => {
+    try {
+      await materialsAPI.delete(id);
+      setMaterials(prev => prev.filter(m => m.id !== id));
+    } catch (err: any) {
+      console.error('Error deleting material:', err);
+      toast.error(err?.message || 'Không thể xóa vật liệu. Vui lòng thử lại.');
+    }
+  };
+
+  // ━━ Partner Handlers ━━
   const handleAddPartner = async (newPartner: Omit<Partner, 'id' | 'totalVolume' | 'totalValue'>) => {
     try {
       const created = await partnersAPI.create(newPartner);
       setPartners(prev => [created, ...prev]);
     } catch (err) {
       console.error('Error adding partner:', err);
-      alert('Không thể thêm đối tác. Vui lòng thử lại.');
+      toast.error('Không thể thêm đối tác. Vui lòng thử lại.');
     }
   };
 
@@ -166,7 +199,7 @@ const MainApp: React.FC = () => {
       ));
     } catch (err) {
       console.error('Error updating partner:', err);
-      alert('Không thể cập nhật đối tác. Vui lòng thử lại.');
+      toast.error('Không thể cập nhật đối tác. Vui lòng thử lại.');
     }
   };
 
@@ -176,7 +209,7 @@ const MainApp: React.FC = () => {
       setPartners(prev => prev.filter(p => p.id !== id));
     } catch (err) {
       console.error('Error deleting partner:', err);
-      alert('Không thể xóa đối tác. Vui lòng thử lại.');
+      toast.error('Không thể xóa đối tác. Vui lòng thử lại.');
     }
   };
 
@@ -205,7 +238,7 @@ const MainApp: React.FC = () => {
       setCurrentView('inventory');
     } catch (err) {
       console.error('Error importing:', err);
-      alert('Không thể thực hiện nhập kho. Vui lòng thử lại.');
+      toast.error('Không thể thực hiện nhập kho. Vui lòng thử lại.');
     }
   };
 
@@ -230,7 +263,7 @@ const MainApp: React.FC = () => {
       setCurrentView('inventory');
     } catch (err) {
       console.error('Error exporting:', err);
-      alert('Không thể thực hiện xuất kho. Vui lòng thử lại.');
+      toast.error('Không thể thực hiện xuất kho. Vui lòng thử lại.');
     }
   };
 
@@ -248,7 +281,7 @@ const MainApp: React.FC = () => {
       setTransactions(transactionsData);
     } catch (err) {
       console.error('Error deleting transaction:', err);
-      alert('Không thể xóa giao dịch. Vui lòng thử lại.');
+      toast.error('Không thể xóa giao dịch. Vui lòng thử lại.');
     }
   };
 
@@ -262,7 +295,7 @@ const MainApp: React.FC = () => {
       setTransactions(transactionsData);
     } catch (err) {
       console.error('Error updating expense:', err);
-      alert('Không thể cập nhật chi phí. Vui lòng thử lại.');
+      toast.error('Không thể cập nhật chi phí. Vui lòng thử lại.');
     }
   };
 
@@ -274,7 +307,7 @@ const MainApp: React.FC = () => {
       setMaterials(materialsData);
     } catch (err) {
       console.error('Error producing:', err);
-      alert('Không thể thực hiện sản xuất. Vui lòng thử lại.');
+      toast.error('Không thể thực hiện sản xuất. Vui lòng thử lại.');
     }
   };
 
@@ -283,7 +316,7 @@ const MainApp: React.FC = () => {
       case 'dashboard':
         return <Dashboard materials={materials} transactions={transactions} />;
       case 'inventory':
-        return <Inventory materials={materials} transactions={transactions} onProduce={handleProduce} onDeleteTransaction={handleDeleteTransaction} />;
+        return <Inventory materials={materials} transactions={transactions} onProduce={handleProduce} onDeleteTransaction={handleDeleteTransaction} onAddMaterial={handleAddMaterial} onUpdateMaterial={handleUpdateMaterial} onDeleteMaterial={handleDeleteMaterial} />;
       case 'partners':
         return <Partners partners={partners} onAddPartner={handleAddPartner} onUpdatePartner={handleUpdatePartner} onDeletePartner={handleDeletePartner} />;
       case 'import':
@@ -319,33 +352,16 @@ const MainApp: React.FC = () => {
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950">
         <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-4"></div>
         <p className="text-slate-400 font-medium">Đang tải dữ liệu...</p>
-        <p className="text-slate-600 text-xs mt-2">v2.0 - Stability Overhaul</p>
+        <p className="text-slate-600 text-xs mt-2">KHO PHẾ THANH NAM</p>
         {loading && error && (
-          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg max-w-md text-center">
-            <p className="text-red-400 text-sm mb-2">{error}</p>
-            <div className="flex gap-2 justify-center">
-              <button
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
-              >
-                Tải lại trang
-              </button>
-              <button
-                onClick={async () => {
-                  import('./lib/supabase').then(async ({ supabase }) => {
-                    const start = Date.now();
-                    console.log("TESTING CONNECTION...");
-                    const { count, error } = await supabase.from('materials').select('*', { count: 'exact', head: true });
-                    const duration = Date.now() - start;
-                    if (error) alert(`CONNECTION FAILED (${duration}ms): ${error.message}`);
-                    else alert(`CONNECTION OK (${duration}ms). Count: ${count}`);
-                  });
-                }}
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition-colors"
-              >
-                Test Mạng
-              </button>
-            </div>
+          <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl max-w-sm text-center">
+            <p className="text-red-400 text-sm mb-3">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-5 py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-sm font-medium transition-colors cursor-pointer"
+            >
+              Tải lại trang
+            </button>
           </div>
         )}
       </div>
@@ -355,37 +371,22 @@ const MainApp: React.FC = () => {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-950 p-4">
-        <div className="bg-slate-800 border border-red-500/50 rounded-2xl p-8 max-w-md text-center">
-          <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-red-400 text-3xl">⚠️</span>
+        <div className="bg-slate-800 border border-red-500/50 rounded-2xl p-8 max-w-sm text-center">
+          <div className="w-14 h-14 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-red-400 text-2xl">⚠️</span>
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">Lỗi Kết Nối</h2>
-          <p className="text-slate-400 mb-4">{error}</p>
+          <h2 className="text-lg font-bold text-white mb-2">Lỗi Kết Nối</h2>
+          <p className="text-slate-400 text-sm mb-5">{error}</p>
           <div className="flex gap-3 justify-center">
             <button
               onClick={() => window.location.reload()}
-              className="bg-primary-600 hover:bg-primary-500 text-white px-6 py-2 rounded-xl font-medium transition-colors"
+              className="bg-primary-600 hover:bg-primary-500 text-white px-5 py-2.5 rounded-xl font-medium transition-colors cursor-pointer text-sm"
             >
               Tải lại trang
             </button>
             <button
-              onClick={async () => {
-                import('./lib/supabase').then(async ({ supabase }) => {
-                  const start = Date.now();
-                  console.log("TESTING CONNECTION...");
-                  const { count, error } = await supabase.from('materials').select('*', { count: 'exact', head: true });
-                  const duration = Date.now() - start;
-                  if (error) alert(`CONNECTION FAILED (${duration}ms): ${error.message}`);
-                  else alert(`CONNECTION OK (${duration}ms). Count: ${count}`);
-                });
-              }}
-              className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded-xl font-medium transition-colors border border-slate-600"
-            >
-              Test Mạng
-            </button>
-            <button
               onClick={() => logout()}
-              className="text-slate-400 hover:text-white px-4 py-2 text-sm transition-colors"
+              className="text-slate-400 hover:text-white px-4 py-2.5 text-sm transition-colors cursor-pointer"
             >
               Đăng Xuất
             </button>
@@ -403,15 +404,17 @@ const MainApp: React.FC = () => {
         isMobile={isMobile}
       />
 
-      <main className="flex-1 p-4 md:p-8 overflow-x-hidden w-full">
+      <main className="flex-1 p-3 md:p-8 overflow-x-hidden w-full">
         {isMobile && (
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="font-bold text-xl text-white">KHO PHẾ THANH NAM</h1>
-            <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700"></div>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="font-bold text-lg text-white">KHO PHẾ THANH NAM</h1>
+            <div className="w-8 h-8 rounded-full bg-primary-600/20 border border-primary-500/30 flex items-center justify-center text-primary-400 text-xs font-bold">
+              {(profile?.full_name || user?.email || '?').charAt(0).toUpperCase()}
+            </div>
           </div>
         )}
 
-        <div className="max-w-7xl mx-auto">
+        <div className={`max-w-7xl mx-auto ${isMobile ? 'mobile-content-pb' : ''}`}>
           {renderContent()}
         </div>
       </main>
@@ -422,7 +425,9 @@ const MainApp: React.FC = () => {
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <MainApp />
+      <ToastProvider>
+        <MainApp />
+      </ToastProvider>
     </AuthProvider>
   );
 };

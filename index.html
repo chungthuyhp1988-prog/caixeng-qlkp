@@ -33,14 +33,34 @@
       }
     </script>
     <style>
+      * {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+      html {
+        scroll-behavior: smooth;
+        overscroll-behavior: contain;
+      }
       body {
         background-color: #0f172a; /* slate-900 */
         color: #f8fafc;
+        overscroll-behavior: contain;
+      }
+      /* Safe area for notch devices */
+      .safe-area-pb {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      .safe-area-top {
+        padding-top: env(safe-area-inset-top, 0px);
+      }
+      /* Bottom nav clearance */
+      .mobile-content-pb {
+        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
       }
       /* Custom Scrollbar */
       ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
+        width: 4px;
+        height: 4px;
       }
       ::-webkit-scrollbar-track {
         background: #1e293b; 
@@ -51,6 +71,12 @@
       }
       ::-webkit-scrollbar-thumb:hover {
         background: #64748b; 
+      }
+      /* Mobile input focus */
+      @media (max-width: 767px) {
+        input, select, textarea {
+          font-size: 16px !important; /* Prevent iOS zoom on focus */
+        }
       }
     </style>
   <script type="importmap">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Factory, Scale, DollarSign, FileText, Send, Package } from 'lucide-react';
 import { Material, MaterialType, Partner, PartnerType } from '../types';
+import { useToast } from './Toast';
 
 interface ExportFormProps {
   materials: Material[];
@@ -9,6 +10,7 @@ interface ExportFormProps {
 }
 
 const ExportForm: React.FC<ExportFormProps> = ({ materials, onExport, partners }) => {
+  const { toast } = useToast();
   const powderMaterial = materials.find(m => m.type === MaterialType.POWDER);
 
   const [formData, setFormData] = useState({
@@ -35,14 +37,14 @@ const ExportForm: React.FC<ExportFormProps> = ({ materials, onExport, partners }
     const stock = powderMaterial?.stock || 0;
 
     if (weight > stock) {
-      alert(`Lỗi: Tồn kho không đủ! Chỉ còn ${stock} kg.`);
+      toast.warning(`Tồn kho không đủ! Chỉ còn ${stock.toLocaleString()} kg.`);
       return;
     }
 
     if (!formData.customer || !price || !weight) return;
 
     onExport(weight, price, formData.customer);
-    alert('Đã tạo phiếu xuất kho thành công!');
+    toast.success('Đã tạo phiếu xuất kho thành công!');
   };
 
   const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,25 +65,25 @@ const ExportForm: React.FC<ExportFormProps> = ({ materials, onExport, partners }
   };
 
   return (
-    <div className="max-w-3xl mx-auto pb-20 md:pb-0">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white">Xuất Bột Nhựa</h2>
-        <p className="text-slate-400 text-sm">Xuất hàng bột nhựa thành phẩm cho nhà máy sản xuất tấm ốp</p>
+    <div className="max-w-3xl mx-auto">
+      <div className="mb-4 md:mb-6">
+        <h2 className="text-xl md:text-2xl font-bold text-white">Xuất Bột Nhựa</h2>
+        <p className="text-slate-400 text-xs md:text-sm">Xuất hàng bột nhựa thành phẩm cho nhà máy</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-slate-800 rounded-2xl border border-slate-700 p-6 md:p-8 shadow-xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form onSubmit={handleSubmit} className="bg-slate-800 rounded-2xl border border-slate-700 p-4 md:p-8 shadow-xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
 
           {/* Static Material Display */}
           <div className="col-span-1 md:col-span-2">
             <label className="block text-slate-400 text-sm font-medium mb-2">Loại thành phẩm</label>
-            <div className="bg-slate-900 p-4 rounded-xl border border-slate-700 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg bg-accent-500/20 text-accent-500 flex items-center justify-center">
-                <Package size={24} />
+            <div className="bg-slate-900 p-3 md:p-4 rounded-xl border border-slate-700 flex items-center gap-3">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-accent-500/20 text-accent-500 flex items-center justify-center">
+                <Package size={20} />
               </div>
               <div>
-                <h3 className="text-white font-bold text-lg">Bột Nhựa Thành Phẩm</h3>
-                <p className="text-slate-400 text-sm">Tồn kho hiện tại: {powderMaterial?.stock.toLocaleString()} kg</p>
+                <h3 className="text-white font-bold text-base md:text-lg">Bột Nhựa Thành Phẩm</h3>
+                <p className="text-slate-400 text-xs md:text-sm">Tồn kho: {powderMaterial?.stock.toLocaleString()} kg</p>
               </div>
             </div>
           </div>
@@ -156,10 +158,10 @@ const ExportForm: React.FC<ExportFormProps> = ({ materials, onExport, partners }
           </div>
 
           {/* Total Calculation */}
-          <div className="col-span-1 md:col-span-2 bg-gradient-to-r from-slate-900 to-slate-800 p-6 rounded-xl border border-slate-700 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="col-span-1 md:col-span-2 bg-gradient-to-r from-slate-900 to-slate-800 p-4 md:p-6 rounded-xl border border-slate-700 flex flex-col md:flex-row justify-between items-center gap-3">
             <div>
-              <span className="block text-slate-400 text-sm mb-1">Thành tiền:</span>
-              <span className="text-3xl font-bold text-white">
+              <span className="block text-slate-400 text-xs md:text-sm mb-1">Thành tiền:</span>
+              <span className="text-2xl md:text-3xl font-bold text-white">
                 {formData.weight && formData.price
                   ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
                     Number(formData.weight.replace(/\./g, '').replace(',', '.')) *
@@ -168,7 +170,7 @@ const ExportForm: React.FC<ExportFormProps> = ({ materials, onExport, partners }
                   : '0 ₫'}
               </span>
             </div>
-            <button type="submit" className="w-full md:w-auto py-3 px-8 bg-accent-500 hover:bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2">
+            <button type="submit" className="w-full md:w-auto py-3.5 md:py-3 px-8 bg-accent-500 hover:bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2 min-h-[48px] cursor-pointer active:scale-[0.98]">
               <Send size={20} />
               Xuất Kho Ngay
             </button>

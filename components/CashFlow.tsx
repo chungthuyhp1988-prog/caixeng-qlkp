@@ -94,6 +94,7 @@ const CashFlow: React.FC<CashFlowProps> = ({ transactions, onAddTransaction, onD
     setCategory(transaction.category || ExpenseCategory.LABOR);
     setNote(transaction.note || '');
     setDate(new Date(transaction.date).toISOString().slice(0, 10));
+    // For revenue (export) edits, we also store partnerName
     setIsModalOpen(true);
   };
 
@@ -121,7 +122,7 @@ const CashFlow: React.FC<CashFlowProps> = ({ transactions, onAddTransaction, onD
   };
 
   return (
-    <div className="space-y-4 md:space-y-6 pb-24 md:pb-0 relative">
+    <div className="space-y-4 md:space-y-6 relative">
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-center">
           <div>
@@ -131,7 +132,7 @@ const CashFlow: React.FC<CashFlowProps> = ({ transactions, onAddTransaction, onD
           {activeTab === 'EXPENSE' && (
             <button
               onClick={() => setIsModalOpen(true)}
-              className="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 shadow-lg shadow-red-900/20"
+              className="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 shadow-lg shadow-red-900/20 min-h-[40px] cursor-pointer active:scale-95"
             >
               <PlusCircle size={16} /> Tạo khoản chi
             </button>
@@ -140,35 +141,35 @@ const CashFlow: React.FC<CashFlowProps> = ({ transactions, onAddTransaction, onD
       </div>
 
       {/* Financial Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex items-center justify-between">
+      <div className="grid grid-cols-3 gap-2 md:gap-3">
+        <div className="bg-slate-800 p-3 md:p-4 rounded-xl border border-slate-700 flex items-center justify-between">
           <div>
-            <p className="text-slate-400 text-xs mb-1 font-medium">Tổng Thu</p>
-            <p className="text-xl font-bold text-green-400">{formatCurrency(totalRevenue)}</p>
+            <p className="text-slate-400 text-[10px] md:text-xs mb-0.5 font-medium">Tổng Thu</p>
+            <p className="text-base md:text-xl font-bold text-green-400">{formatCurrency(totalRevenue)}</p>
           </div>
-          <div className="w-10 h-10 bg-green-500/10 rounded-full flex items-center justify-center text-green-400">
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-green-500/10 rounded-full flex items-center justify-center text-green-400">
             <ArrowDownRight size={20} />
           </div>
         </div>
 
-        <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex items-center justify-between">
+        <div className="bg-slate-800 p-3 md:p-4 rounded-xl border border-slate-700 flex items-center justify-between">
           <div>
-            <p className="text-slate-400 text-xs mb-1 font-medium">Tổng Chi</p>
-            <p className="text-xl font-bold text-red-400">{formatCurrency(totalExpense)}</p>
+            <p className="text-slate-400 text-[10px] md:text-xs mb-0.5 font-medium">Tổng Chi</p>
+            <p className="text-base md:text-xl font-bold text-red-400">{formatCurrency(totalExpense)}</p>
           </div>
-          <div className="w-10 h-10 bg-red-500/10 rounded-full flex items-center justify-center text-red-400">
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-red-500/10 rounded-full flex items-center justify-center text-red-400">
             <ArrowUpRight size={20} />
           </div>
         </div>
 
-        <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex items-center justify-between">
+        <div className="bg-slate-800 p-3 md:p-4 rounded-xl border border-slate-700 flex items-center justify-between">
           <div>
-            <p className="text-slate-400 text-xs mb-1 font-medium">Lợi Nhuận</p>
-            <p className={`text-xl font-bold ${netProfit >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
+            <p className="text-slate-400 text-[10px] md:text-xs mb-0.5 font-medium">Lợi Nhuận</p>
+            <p className={`text-base md:text-xl font-bold ${netProfit >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
               {formatCurrency(netProfit)}
             </p>
           </div>
-          <div className="w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-400">
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-400">
             <Wallet size={20} />
           </div>
         </div>
@@ -178,13 +179,13 @@ const CashFlow: React.FC<CashFlowProps> = ({ transactions, onAddTransaction, onD
       <div className="flex p-1 bg-slate-800 rounded-xl border border-slate-700">
         <button
           onClick={() => setActiveTab('REVENUE')}
-          className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'REVENUE' ? 'bg-green-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+          className={`flex-1 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all cursor-pointer min-h-[40px] ${activeTab === 'REVENUE' ? 'bg-green-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
         >
           Doanh Thu (Thu)
         </button>
         <button
           onClick={() => setActiveTab('EXPENSE')}
-          className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'EXPENSE' ? 'bg-red-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+          className={`flex-1 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all cursor-pointer min-h-[40px] ${activeTab === 'EXPENSE' ? 'bg-red-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
         >
           Chi Phí (Chi)
         </button>
@@ -195,7 +196,7 @@ const CashFlow: React.FC<CashFlowProps> = ({ transactions, onAddTransaction, onD
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
           <button
             onClick={() => setExpenseFilter('ALL')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border ${expenseFilter === 'ALL' ? 'bg-slate-700 border-slate-500 text-white' : 'bg-transparent border-slate-700 text-slate-400'}`}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border min-h-[36px] cursor-pointer ${expenseFilter === 'ALL' ? 'bg-slate-700 border-slate-500 text-white' : 'bg-transparent border-slate-700 text-slate-400'}`}
           >
             Tất cả
           </button>
@@ -235,11 +236,11 @@ const CashFlow: React.FC<CashFlowProps> = ({ transactions, onAddTransaction, onD
             }
 
             return (
-              <div key={t.id} className="p-4 flex items-center justify-between hover:bg-slate-700/30 transition-colors">
+              <div key={t.id} className="p-3 md:p-4 flex items-center justify-between hover:bg-slate-700/30 transition-colors">
 
                 {/* Left Side: Icon & Details */}
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${iconColorClass}`}>
+                <div className="flex items-center gap-2.5 md:gap-3 overflow-hidden">
+                  <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center shrink-0 ${iconColorClass}`}>
                     {isRevenue ? <ArrowDownRight size={18} /> : getCategoryIcon(t.category)}
                   </div>
 
@@ -278,24 +279,23 @@ const CashFlow: React.FC<CashFlowProps> = ({ transactions, onAddTransaction, onD
                     <span className="text-[10px] text-slate-500 font-medium">VND</span>
                   </div>
 
-                  {!isRevenue && (
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => handleEdit(t)}
-                        className="p-2 hover:bg-slate-600 rounded-lg text-slate-400 hover:text-blue-400 transition-colors"
-                        title="Sửa"
-                      >
-                        <Pencil size={16} />
-                      </button>
-                      <button
-                        onClick={() => setDeleteConfirm(t.id)}
-                        className="p-2 hover:bg-slate-600 rounded-lg text-slate-400 hover:text-red-400 transition-colors"
-                        title="Xóa"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  )}
+                  {/* Edit/Delete actions for ALL transactions */}
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => handleEdit(t)}
+                      className="p-2 hover:bg-slate-600 rounded-lg text-slate-400 hover:text-blue-400 transition-colors cursor-pointer"
+                      title="Sửa"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirm(t.id)}
+                      className="p-2 hover:bg-slate-600 rounded-lg text-slate-400 hover:text-red-400 transition-colors cursor-pointer"
+                      title="Xóa"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -312,7 +312,11 @@ const CashFlow: React.FC<CashFlowProps> = ({ transactions, onAddTransaction, onD
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 w-full max-w-md shadow-2xl animate-in fade-in duration-200">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-white">{editingTransaction ? 'Cập Nhật Khoản Chi' : 'Tạo Khoản Chi Mới'}</h3>
+              <h3 className="text-xl font-bold text-white">
+                {editingTransaction
+                  ? (editingTransaction.type === TransactionType.EXPORT ? 'Cập Nhật Doanh Thu' : 'Cập Nhật Khoản Chi')
+                  : 'Tạo Khoản Chi Mới'}
+              </h3>
               <button onClick={closeModal} className="text-slate-400 hover:text-white">
                 <X size={24} />
               </button>
@@ -389,7 +393,7 @@ const CashFlow: React.FC<CashFlowProps> = ({ transactions, onAddTransaction, onD
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-600/20 transition-all"
+                  className="w-full py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-600/20 transition-all min-h-[48px] cursor-pointer active:scale-[0.98]"
                 >
                   Lưu Khoản Chi
                 </button>

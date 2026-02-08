@@ -80,9 +80,9 @@ const Partners: React.FC<PartnersProps> = ({ partners, onAddPartner, onUpdatePar
   };
 
   return (
-    <div className="space-y-4 md:space-y-6 pb-24 md:pb-0 relative">
+    <div className="space-y-4 md:space-y-6 relative">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl md:text-2xl font-bold text-white">Quản Lý Đối Tác</h2>
           <p className="text-slate-400 text-xs md:text-sm">Danh sách nhà cung cấp & khách hàng</p>
@@ -90,7 +90,7 @@ const Partners: React.FC<PartnersProps> = ({ partners, onAddPartner, onUpdatePar
         <div className="flex gap-2">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shadow-lg shadow-primary-600/20"
+            className="bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shadow-lg shadow-primary-600/20 min-h-[44px] cursor-pointer active:scale-95"
           >
             <UserPlus size={18} />
             <span className="hidden md:inline">Thêm Đối Tác</span>
@@ -100,23 +100,23 @@ const Partners: React.FC<PartnersProps> = ({ partners, onAddPartner, onUpdatePar
       </div>
 
       {/* Tabs & Search */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between">
+      <div className="flex flex-col md:flex-row gap-3 justify-between">
         <div className="flex bg-slate-800 p-1 rounded-xl w-full md:w-auto">
           <button
             onClick={() => setFilter('ALL')}
-            className={`flex-1 md:flex-initial px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === 'ALL' ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+            className={`flex-1 md:flex-initial px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all cursor-pointer min-h-[40px] ${filter === 'ALL' ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-white'}`}
           >
             Tất cả
           </button>
           <button
             onClick={() => setFilter(PartnerType.SUPPLIER)}
-            className={`flex-1 md:flex-initial px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === PartnerType.SUPPLIER ? 'bg-slate-700 text-orange-400 shadow' : 'text-slate-400 hover:text-white'}`}
+            className={`flex-1 md:flex-initial px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all cursor-pointer min-h-[40px] ${filter === PartnerType.SUPPLIER ? 'bg-slate-700 text-orange-400 shadow' : 'text-slate-400 hover:text-white'}`}
           >
             Nhà Cung Cấp
           </button>
           <button
             onClick={() => setFilter(PartnerType.CUSTOMER)}
-            className={`flex-1 md:flex-initial px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === PartnerType.CUSTOMER ? 'bg-slate-700 text-blue-400 shadow' : 'text-slate-400 hover:text-white'}`}
+            className={`flex-1 md:flex-initial px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all cursor-pointer min-h-[40px] ${filter === PartnerType.CUSTOMER ? 'bg-slate-700 text-blue-400 shadow' : 'text-slate-400 hover:text-white'}`}
           >
             Khách Hàng
           </button>
@@ -129,21 +129,21 @@ const Partners: React.FC<PartnersProps> = ({ partners, onAddPartner, onUpdatePar
             placeholder="Tìm tên, SĐT..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-slate-800 border border-slate-700 text-white pl-10 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-primary-500"
+            className="w-full bg-slate-800 border border-slate-700 text-white pl-10 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-primary-500 min-h-[44px]"
           />
         </div>
       </div>
 
       {/* Partners List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
         {filteredPartners.map((partner) => {
           const isSupplier = partner.type === PartnerType.SUPPLIER;
           return (
-            <div key={partner.id} className="bg-slate-800 rounded-2xl border border-slate-700 p-5 hover:border-slate-600 transition-all flex flex-col">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isSupplier ? 'bg-orange-500/10 text-orange-400' : 'bg-blue-500/10 text-blue-400'}`}>
-                    {isSupplier ? <Truck size={24} /> : <Factory size={24} />}
+            <div key={partner.id} className="bg-slate-800 rounded-2xl border border-slate-700 p-4 md:p-5 hover:border-slate-600 transition-all flex flex-col">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2.5 md:gap-3">
+                  <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center ${isSupplier ? 'bg-orange-500/10 text-orange-400' : 'bg-blue-500/10 text-blue-400'}`}>
+                    {isSupplier ? <Truck size={20} /> : <Factory size={20} />}
                   </div>
                   <div>
                     <h3 className="text-white font-bold text-base line-clamp-1">{partner.name}</h3>
@@ -171,25 +171,25 @@ const Partners: React.FC<PartnersProps> = ({ partners, onAddPartner, onUpdatePar
                 </div>
               </div>
 
-              <div className="space-y-2 mb-4 flex-1">
-                <div className="flex items-center gap-2 text-slate-400 text-sm">
+              <div className="space-y-1.5 mb-3 flex-1">
+                <div className="flex items-center gap-2 text-slate-400 text-xs md:text-sm">
                   <Phone size={14} />
                   <span>{partner.phone || 'Chưa cập nhật SĐT'}</span>
                 </div>
-                <div className="flex items-center gap-2 text-slate-400 text-sm">
+                <div className="flex items-center gap-2 text-slate-400 text-xs md:text-sm">
                   <MapPin size={14} />
                   <span className="line-clamp-1">{partner.address || 'Chưa cập nhật địa chỉ'}</span>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-700 mt-auto">
+              <div className="pt-3 border-t border-slate-700 mt-auto">
                 <div className="flex justify-between items-end">
                   <div>
-                    <p className="text-xs text-slate-500">Tổng giao dịch</p>
+                    <p className="text-[10px] md:text-xs text-slate-500">Tổng giao dịch</p>
                     <p className="text-sm font-bold text-white">{partner.totalVolume.toLocaleString()} kg</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-slate-500">Tổng giá trị</p>
+                    <p className="text-[10px] md:text-xs text-slate-500">Tổng giá trị</p>
                     <p className={`text-sm font-bold ${isSupplier ? 'text-orange-400' : 'text-blue-400'}`}>
                       {formatCurrency(partner.totalValue)}
                     </p>
@@ -213,14 +213,14 @@ const Partners: React.FC<PartnersProps> = ({ partners, onAddPartner, onUpdatePar
                 <button
                   type="button"
                   onClick={() => setNewType(PartnerType.SUPPLIER)}
-                  className={`flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 ${newType === PartnerType.SUPPLIER ? 'bg-orange-500/10 border-orange-500 text-orange-400' : 'border-slate-700 text-slate-400'}`}
+                  className={`flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer min-h-[44px] ${newType === PartnerType.SUPPLIER ? 'bg-orange-500/10 border-orange-500 text-orange-400' : 'border-slate-700 text-slate-400'}`}
                 >
                   <Truck size={18} /> Nhà cung cấp
                 </button>
                 <button
                   type="button"
                   onClick={() => setNewType(PartnerType.CUSTOMER)}
-                  className={`flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 ${newType === PartnerType.CUSTOMER ? 'bg-blue-500/10 border-blue-500 text-blue-400' : 'border-slate-700 text-slate-400'}`}
+                  className={`flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer min-h-[44px] ${newType === PartnerType.CUSTOMER ? 'bg-blue-500/10 border-blue-500 text-blue-400' : 'border-slate-700 text-slate-400'}`}
                 >
                   <Factory size={18} /> Khách hàng
                 </button>
@@ -264,13 +264,13 @@ const Partners: React.FC<PartnersProps> = ({ partners, onAddPartner, onUpdatePar
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium"
+                  className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium min-h-[44px] cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-primary-600 hover:bg-primary-500 text-white rounded-xl font-bold"
+                  className="flex-1 py-3 bg-primary-600 hover:bg-primary-500 text-white rounded-xl font-bold min-h-[44px] cursor-pointer active:scale-[0.98]"
                 >
                   Lưu
                 </button>

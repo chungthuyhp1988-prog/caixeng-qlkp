@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Package, ArrowDownToLine, ArrowUpFromLine, Settings, Recycle, Wallet, Users, LogOut, Briefcase, Key } from 'lucide-react';
+import { LayoutDashboard, Package, ArrowDownToLine, ArrowUpFromLine, Settings, Recycle, Wallet, Users, LogOut, Briefcase, Key, MoreHorizontal, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from './Toast';
 import ChangePasswordModal from './ChangePasswordModal';
 
 interface SidebarProps {
@@ -11,36 +12,52 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isMobile }) => {
   const { logout, user, isAdmin, profile } = useAuth();
+  const { toast, confirm } = useToast();
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
-  const menuItems = [
+  // Main items shown in bottom nav (max 5 for mobile)
+  const mainMenuItems = [
     { id: 'dashboard', label: 'Tổng Quan', mobileLabel: 'Tổng quan', icon: <LayoutDashboard size={20} /> },
     { id: 'inventory', label: 'Kho Hàng', mobileLabel: 'Kho', icon: <Package size={20} /> },
-    { id: 'partners', label: 'Đối Tác', mobileLabel: 'Đối tác', icon: <Users size={20} /> },
     { id: 'import', label: 'Nhập Phế', mobileLabel: 'Nhập', icon: <ArrowDownToLine size={20} /> },
     { id: 'export', label: 'Xuất Bột', mobileLabel: 'Xuất', icon: <ArrowUpFromLine size={20} /> },
-    { id: 'finance', label: 'Sổ Thu Chi', mobileLabel: 'ThuChi', icon: <Wallet size={20} /> },
+    { id: 'finance', label: 'Sổ Thu Chi', mobileLabel: 'Thu Chi', icon: <Wallet size={20} /> },
   ];
 
-  // Add Personnel menu for Admins
+  // Extra items for "More" menu
+  const moreMenuItems = [
+    { id: 'partners', label: 'Đối Tác', mobileLabel: 'Đối tác', icon: <Users size={20} /> },
+  ];
+
   if (isAdmin) {
-    menuItems.push({ id: 'personnel', label: 'Nhân Sự', mobileLabel: 'Nhân sự', icon: <Briefcase size={20} /> });
+    moreMenuItems.push({ id: 'personnel', label: 'Nhân Sự', mobileLabel: 'Nhân sự', icon: <Briefcase size={20} /> });
+  }
+
+  // Full menu for desktop sidebar
+  const allMenuItems = [
+    ...mainMenuItems.slice(0, 2), // Dashboard, Kho
+    { id: 'partners', label: 'Đối Tác', mobileLabel: 'Đối tác', icon: <Users size={20} /> },
+    ...mainMenuItems.slice(2), // Nhập, Xuất, Thu Chi
+  ];
+  if (isAdmin) {
+    allMenuItems.push({ id: 'personnel', label: 'Nhân Sự', mobileLabel: 'Nhân sự', icon: <Briefcase size={20} /> });
   }
 
   const handleLogout = async () => {
-    if (window.confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+    const ok = await confirm('Bạn có chắc chắn muốn đăng xuất?');
+    if (ok) {
       try {
-        console.log('Logging out...');
         await logout();
-        console.log('Logout successful');
-        // Force reload to clear all state
         window.location.reload();
       } catch (error) {
         console.error('Logout error:', error);
-        alert('Có lỗi khi đăng xuất. Vui lòng thử lại.');
       }
     }
   };
+
+  // Check if current view is in more menu
+  const isMoreActive = moreMenuItems.some(item => item.id === currentView);
 
   const content = (
     <div className="flex flex-col h-full bg-slate-900 border-r border-slate-800 text-white shadow-xl z-20">
@@ -77,11 +94,11 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isMobile
       </div>
 
       <nav className="flex-1 px-4 py-2 space-y-2 overflow-y-auto custom-scrollbar">
-        {menuItems.map((item) => (
+        {allMenuItems.map((item) => (
           <button
             key={item.id}
             onClick={() => setCurrentView(item.id)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative ${currentView === item.id
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative cursor-pointer ${currentView === item.id
               ? 'bg-primary-600 text-white shadow-md shadow-primary-900/20'
               : 'text-slate-400 hover:bg-slate-800 hover:text-white'
               }`}
@@ -99,15 +116,15 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isMobile
 
       <div className="p-4 border-t border-slate-800 space-y-2">
         <button
-          onClick={() => alert("Tính năng đang phát triển")}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+          onClick={() => toast.info('Tính năng đang phát triển')}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
         >
           <Settings size={20} />
           <span className="font-medium text-sm">Cài đặt</span>
         </button>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
         >
           <LogOut size={20} />
           <span className="font-medium text-sm">Đăng xuất</span>
@@ -123,20 +140,113 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isMobile
 
   if (isMobile) {
     return (
-      <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 flex justify-between px-2 py-2 z-50 shadow-2xl safe-area-pb overflow-x-auto">
-        {menuItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setCurrentView(item.id)}
-            className={`flex flex-col items-center justify-center p-2 rounded-xl flex-1 min-w-[60px] transition-all active:scale-95 ${currentView === item.id ? 'text-primary-500 bg-primary-500/10' : 'text-slate-500'
-              }`}
-          >
-            {React.cloneElement(item.icon as any, { size: 20 })}
-            <span className="text-[10px] mt-1 font-medium whitespace-nowrap">{item.mobileLabel}</span>
-          </button>
-        ))}
-        {/* Mobile Logout could be in a separate more menu, but for now kept simple */}
-      </div>
+      <>
+        {/* More Menu Overlay */}
+        {isMoreMenuOpen && (
+          <div className="fixed inset-0 z-[60]" onClick={() => setIsMoreMenuOpen(false)}>
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+            <div
+              className="absolute bottom-[68px] left-3 right-3 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden"
+              style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700">
+                <span className="text-sm font-semibold text-white">Thêm</span>
+                <button
+                  onClick={() => setIsMoreMenuOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* User info */}
+              <div className="px-4 py-3 border-b border-slate-700/50">
+                <p className="text-xs text-slate-400">Xin chào,</p>
+                <p className="text-sm font-bold text-white truncate">
+                  {profile?.full_name && profile.full_name !== user?.email
+                    ? profile.full_name
+                    : user?.user_metadata?.full_name || user?.email}
+                </p>
+                <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-700 text-slate-300 uppercase">
+                  {isAdmin ? 'Quản lý' : 'Nhân viên'}
+                </span>
+              </div>
+              <div className="p-2">
+                {moreMenuItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setCurrentView(item.id);
+                      setIsMoreMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors cursor-pointer ${currentView === item.id
+                      ? 'bg-primary-600/20 text-primary-400'
+                      : 'text-slate-300 active:bg-slate-700'
+                      }`}
+                  >
+                    {item.icon}
+                    <span className="font-medium text-sm">{item.mobileLabel}</span>
+                  </button>
+                ))}
+                <button
+                  onClick={() => {
+                    setIsMoreMenuOpen(false);
+                    setIsPasswordModalOpen(true);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 active:bg-slate-700 transition-colors cursor-pointer"
+                >
+                  <Key size={20} />
+                  <span className="font-medium text-sm">Đổi mật khẩu</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsMoreMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 active:bg-red-500/10 transition-colors cursor-pointer mt-1 border-t border-slate-700/50"
+                >
+                  <LogOut size={20} />
+                  <span className="font-medium text-sm">Đăng xuất</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Bottom Navigation Bar */}
+        <div
+          className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 z-50 shadow-2xl"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        >
+          <div className="flex items-stretch justify-around px-1 py-1.5">
+            {mainMenuItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setCurrentView(item.id)}
+                className={`flex flex-col items-center justify-center min-h-[48px] min-w-[48px] px-1 py-1.5 rounded-xl flex-1 transition-colors active:scale-95 cursor-pointer ${currentView === item.id
+                  ? 'text-primary-400 bg-primary-500/10'
+                  : 'text-slate-500 active:text-slate-300'
+                  }`}
+              >
+                {React.cloneElement(item.icon as any, { size: 22 })}
+                <span className="text-[10px] mt-0.5 font-medium leading-tight">{item.mobileLabel}</span>
+              </button>
+            ))}
+            {/* More button */}
+            <button
+              onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
+              className={`flex flex-col items-center justify-center min-h-[48px] min-w-[48px] px-1 py-1.5 rounded-xl flex-1 transition-colors active:scale-95 cursor-pointer ${isMoreActive || isMoreMenuOpen
+                ? 'text-primary-400 bg-primary-500/10'
+                : 'text-slate-500 active:text-slate-300'
+                }`}
+            >
+              <MoreHorizontal size={22} />
+              <span className="text-[10px] mt-0.5 font-medium leading-tight">Thêm</span>
+            </button>
+          </div>
+        </div>
+      </>
     );
   }
 

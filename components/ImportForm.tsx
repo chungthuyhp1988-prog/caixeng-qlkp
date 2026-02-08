@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Truck, Scale, DollarSign, Save, Recycle } from 'lucide-react';
+import { Truck, Scale, DollarSign, Save, Recycle, FileText } from 'lucide-react';
 import { Partner, PartnerType } from '../types';
+import { useToast } from './Toast';
 
 interface ImportFormProps {
   onImport: (amount: number, price: number, supplier: string) => void;
@@ -8,6 +9,7 @@ interface ImportFormProps {
 }
 
 const ImportForm: React.FC<ImportFormProps> = ({ onImport, partners }) => {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     supplier: '',
     weight: '',
@@ -38,7 +40,7 @@ const ImportForm: React.FC<ImportFormProps> = ({ onImport, partners }) => {
       formData.supplier
     );
 
-    alert('Đã nhập kho thành công!');
+    toast.success('Đã nhập kho thành công!');
   };
 
   const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,24 +68,24 @@ const ImportForm: React.FC<ImportFormProps> = ({ onImport, partners }) => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto pb-20 md:pb-0">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white">Nhập Kho Nhựa Phế</h2>
-        <p className="text-slate-400 text-sm">Nhập liệu nhanh gọn, không cần hình ảnh</p>
+    <div className="max-w-3xl mx-auto">
+      <div className="mb-4 md:mb-6">
+        <h2 className="text-xl md:text-2xl font-bold text-white">Nhập Kho Nhựa Phế</h2>
+        <p className="text-slate-400 text-xs md:text-sm">Nhập liệu nhanh gọn, không cần hình ảnh</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-slate-800 rounded-2xl border border-slate-700 p-6 md:p-8 shadow-xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form onSubmit={handleSubmit} className="bg-slate-800 rounded-2xl border border-slate-700 p-4 md:p-8 shadow-xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
 
           {/* Static Material Display */}
           <div className="col-span-1 md:col-span-2">
-            <div className="bg-slate-900 p-4 rounded-xl border border-slate-700 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg bg-orange-500/20 text-orange-500 flex items-center justify-center">
-                <Recycle size={24} />
+            <div className="bg-slate-900 p-3 md:p-4 rounded-xl border border-slate-700 flex items-center gap-3">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-orange-500/20 text-orange-500 flex items-center justify-center">
+                <Recycle size={20} />
               </div>
               <div>
-                <h3 className="text-white font-bold text-lg">Nhựa Phế Liệu</h3>
-                <p className="text-slate-400 text-sm">Nguyên liệu đầu vào</p>
+                <h3 className="text-white font-bold text-base md:text-lg">Nhựa Phế Liệu</h3>
+                <p className="text-slate-400 text-xs md:text-sm">Nguyên liệu đầu vào</p>
               </div>
             </div>
           </div>
@@ -97,7 +99,7 @@ const ImportForm: React.FC<ImportFormProps> = ({ onImport, partners }) => {
                 type="text"
                 required
                 list="suppliers-list"
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 min-h-[44px]"
                 placeholder="Chọn hoặc nhập tên..."
                 value={formData.supplier}
                 onChange={e => setFormData({ ...formData, supplier: e.target.value })}
@@ -143,9 +145,9 @@ const ImportForm: React.FC<ImportFormProps> = ({ onImport, partners }) => {
           </div>
 
           {/* Total Calculation */}
-          <div className="col-span-1 md:col-span-2 bg-slate-900/50 p-6 rounded-xl border border-slate-700/50 flex flex-col items-center justify-center gap-2">
-            <span className="text-slate-400 text-sm uppercase tracking-wider font-semibold">Thành tiền</span>
-            <span className="text-3xl font-bold text-primary-400">
+          <div className="col-span-1 md:col-span-2 bg-slate-900/50 p-4 md:p-6 rounded-xl border border-slate-700/50 flex flex-col items-center justify-center gap-1">
+            <span className="text-slate-400 text-xs uppercase tracking-wider font-semibold">Thành tiền</span>
+            <span className="text-2xl md:text-3xl font-bold text-primary-400">
               {formData.weight && formData.price
                 ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
                   Number(formData.weight.replace(/\./g, '').replace(',', '.')) *
@@ -157,9 +159,9 @@ const ImportForm: React.FC<ImportFormProps> = ({ onImport, partners }) => {
 
         </div>
 
-        <div className="mt-8">
-          <button type="submit" className="w-full py-4 px-4 bg-primary-600 hover:bg-primary-500 text-white rounded-xl font-bold shadow-lg shadow-primary-600/20 transition-all flex items-center justify-center gap-2 text-lg">
-            <Save size={24} />
+        <div className="mt-6 md:mt-8">
+          <button type="submit" className="w-full py-3.5 md:py-4 px-4 bg-primary-600 hover:bg-primary-500 text-white rounded-xl font-bold shadow-lg shadow-primary-600/20 transition-all flex items-center justify-center gap-2 text-base md:text-lg min-h-[48px] cursor-pointer active:scale-[0.98]">
+            <Save size={20} />
             Lưu Phiếu Nhập
           </button>
         </div>
