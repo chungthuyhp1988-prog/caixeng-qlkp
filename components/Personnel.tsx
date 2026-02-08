@@ -115,8 +115,9 @@ const Personnel = () => {
             }
             closeModal();
             fetchStaff();
-        } catch (err) {
-            toast.error('Đã có lỗi xảy ra. Vui lòng thử lại.');
+        } catch (err: any) {
+            const msg = err?.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.';
+            toast.error(msg);
             console.error(err);
         }
     };
